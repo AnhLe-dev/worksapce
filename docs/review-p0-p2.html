@@ -1,0 +1,719 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Review Guide P0–P2 · Generic RAG Core + Backend API</title>
+  <style>
+    :root {
+      --bg: #f5f7fb;
+      --paper: #ffffff;
+      --ink: #172033;
+      --muted: #647089;
+      --line: #dfe5ef;
+      --nav: #111b31;
+      --nav-2: #182744;
+      --blue: #2457d6;
+      --cyan: #087f8c;
+      --green: #157347;
+      --amber: #9a6700;
+      --red: #b42318;
+      --purple: #6941c6;
+      --shadow: 0 12px 34px rgba(28, 42, 71, .08);
+      --radius: 14px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--bg);
+      font: 15px/1.62 Inter, ui-sans-serif, system-ui, -apple-system,
+        BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    a { color: var(--blue); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code, pre {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+    code {
+      padding: .12rem .35rem;
+      border-radius: 5px;
+      background: #edf1f8;
+      color: #263b63;
+      font-size: .92em;
+    }
+    pre {
+      overflow: auto;
+      margin: 1rem 0;
+      padding: 1rem 1.1rem;
+      border: 1px solid #26395e;
+      border-radius: 10px;
+      color: #e7eefc;
+      background: #111b31;
+      font-size: 13px;
+      line-height: 1.55;
+    }
+    .layout { min-height: 100vh; }
+    .sidebar {
+      position: fixed;
+      inset: 0 auto 0 0;
+      z-index: 20;
+      width: 300px;
+      overflow-y: auto;
+      padding: 24px 18px 40px;
+      color: #d9e4fa;
+      background: linear-gradient(165deg, var(--nav), var(--nav-2));
+    }
+    .brand {
+      margin: 0 0 6px;
+      color: white;
+      font-size: 19px;
+      font-weight: 750;
+      letter-spacing: -.02em;
+    }
+    .brand-sub { margin: 0 0 20px; color: #9fb0cf; font-size: 12px; }
+    .search {
+      width: 100%;
+      margin-bottom: 18px;
+      padding: 10px 12px;
+      border: 1px solid #415276;
+      border-radius: 9px;
+      outline: none;
+      color: white;
+      background: rgba(255,255,255,.07);
+    }
+    .search::placeholder { color: #aebbd2; }
+    .nav-group { margin: 20px 7px 7px; color: #7fd1db; font-size: 11px; font-weight: 800; letter-spacing: .11em; text-transform: uppercase; }
+    .sidebar nav a {
+      display: block;
+      margin: 2px 0;
+      padding: 7px 9px;
+      border-radius: 7px;
+      color: #c9d5ec;
+      font-size: 13px;
+    }
+    .sidebar nav a:hover { color: white; background: rgba(255,255,255,.09); text-decoration: none; }
+    main { margin-left: 300px; padding: 32px clamp(24px, 5vw, 72px) 80px; }
+    .hero {
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 28px;
+      padding: 34px;
+      border-radius: 20px;
+      color: white;
+      background: linear-gradient(125deg, #18376f, #2457d6 60%, #087f8c);
+      box-shadow: var(--shadow);
+    }
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 280px;
+      height: 280px;
+      right: -90px;
+      top: -110px;
+      border: 44px solid rgba(255,255,255,.09);
+      border-radius: 50%;
+    }
+    .hero h1 { max-width: 850px; margin: 0 0 10px; font-size: clamp(29px, 4vw, 48px); line-height: 1.08; letter-spacing: -.035em; }
+    .hero p { max-width: 850px; margin: 0; color: #dfe8fb; }
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+    .chip, .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 9px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 750;
+      letter-spacing: .02em;
+    }
+    .chip { border: 1px solid rgba(255,255,255,.24); background: rgba(255,255,255,.1); }
+    .status.done { color: #075b38; background: #d9f7e8; }
+    .status.progress { color: #7a5200; background: #fff0c2; }
+    .status.plan { color: #35415b; background: #e9edf5; }
+    .status.blocked { color: #8e1a12; background: #fee4e2; }
+    section { scroll-margin-top: 22px; margin: 28px 0; }
+    .section-head { margin-bottom: 14px; }
+    h2 { margin: 0 0 6px; color: #142850; font-size: 26px; letter-spacing: -.025em; }
+    h3 { margin: 24px 0 10px; color: #1e3d74; font-size: 19px; }
+    h4 { margin: 18px 0 8px; color: #304a75; }
+    p { margin: .55rem 0; }
+    .muted { color: var(--muted); }
+    .grid { display: grid; gap: 14px; }
+    .grid.two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid.three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .card {
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+      box-shadow: var(--shadow);
+    }
+    .card h3, .card h4 { margin-top: 0; }
+    .callout {
+      margin: 14px 0;
+      padding: 13px 15px;
+      border-left: 4px solid var(--blue);
+      border-radius: 8px;
+      background: #eef4ff;
+    }
+    .callout.warn { border-color: var(--amber); background: #fff8e7; }
+    .callout.danger { border-color: var(--red); background: #fff0ef; }
+    .callout.ok { border-color: var(--green); background: #eaf8f1; }
+    .flow {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: stretch;
+      gap: 8px;
+      padding: 17px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: white;
+      box-shadow: var(--shadow);
+    }
+    .node {
+      display: flex;
+      min-width: 135px;
+      flex: 1 1 145px;
+      flex-direction: column;
+      justify-content: center;
+      padding: 12px;
+      border: 1px solid #b9c8e2;
+      border-radius: 10px;
+      background: #f3f7ff;
+      text-align: center;
+      font-weight: 750;
+    }
+    .node small { display: block; margin-top: 4px; color: var(--muted); font-weight: 500; }
+    .node.trust { border-color: #8fd0d5; background: #ebfbfc; }
+    .node.store { border-color: #c5afea; background: #f6f0ff; }
+    .arrow { display: grid; place-items: center; color: var(--blue); font-size: 22px; font-weight: 800; }
+    .table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 12px; background: white; box-shadow: var(--shadow); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 11px 12px; border-bottom: 1px solid var(--line); vertical-align: top; text-align: left; }
+    th { position: sticky; top: 0; z-index: 1; color: #31405f; background: #eef2f8; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; }
+    tr:last-child td { border-bottom: 0; }
+    tr[data-search].hidden, .searchable.hidden { display: none !important; }
+    .file { white-space: nowrap; font-weight: 720; }
+    .io { min-width: 285px; }
+    .io b { color: #243d6a; }
+    .why { min-width: 230px; }
+    .checklist { list-style: none; margin: 0; padding: 0; }
+    .checklist li { margin: 7px 0; }
+    .checklist label { display: flex; gap: 9px; align-items: flex-start; cursor: pointer; }
+    .checklist input { margin-top: 5px; accent-color: var(--green); }
+    .phase-strip { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+    .phase { padding: 14px; border-radius: 10px; color: white; background: #294e91; }
+    .phase:nth-child(2) { background: #176b75; }
+    .phase:nth-child(3) { background: #6846a5; }
+    .phase strong { display: block; font-size: 18px; }
+    .phase small { color: rgba(255,255,255,.82); }
+    .kbd { display: inline-block; padding: 1px 6px; border: 1px solid #b7c1d2; border-bottom-width: 2px; border-radius: 5px; background: white; font-size: 12px; }
+    footer { margin-top: 46px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+    @media (max-width: 1000px) {
+      .sidebar { position: static; width: auto; max-height: none; }
+      main { margin-left: 0; }
+      .grid.two, .grid.three { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 650px) {
+      main { padding: 18px 12px 50px; }
+      .hero { padding: 24px 18px; border-radius: 14px; }
+      .phase-strip { grid-template-columns: 1fr; }
+      .arrow { flex-basis: 100%; transform: rotate(90deg); }
+    }
+    @media print {
+      body { background: white; font-size: 11px; }
+      .sidebar { display: none; }
+      main { margin: 0; padding: 0; }
+      .hero { color: black; background: white; border: 2px solid #333; box-shadow: none; }
+      .hero p { color: #333; }
+      .chip { color: #222; border-color: #777; }
+      .card, .flow, .table-wrap { box-shadow: none; break-inside: avoid; }
+      section { break-before: auto; }
+      a { color: black; text-decoration: underline; }
+      .search { display: none; }
+    }
+  </style>
+</head>
+<body>
+<div class="layout">
+  <aside class="sidebar">
+    <div class="brand">Review Guide · P0–P2</div>
+    <p class="brand-sub">Generic RAG Core + Backend API · cập nhật 03/11/2026</p>
+    <input id="search" class="search" type="search" placeholder="Tìm file, module, failure…" aria-label="Tìm trong tài liệu">
+    <nav>
+      <div class="nav-group">Bắt đầu</div>
+      <a href="#how-to-use">Cách dùng tài liệu</a>
+      <a href="#status">Trạng thái hiện tại</a>
+      <a href="#architecture">Kiến trúc P0–P2</a>
+      <a href="#review-rhythm">Nhịp review</a>
+      <div class="nav-group">Phase 0</div>
+      <a href="#batch-0">Batch 0 · Audit baseline</a>
+      <div class="nav-group">Phase 1 · RAG Core</div>
+      <a href="#batch-1">Batch 1 · Ingestion &amp; chunking</a>
+      <a href="#batch-2a">Batch 2A · Indexing core</a>
+      <a href="#batch-2b">Batch 2B · Provider adapters</a>
+      <a href="#batch-3">Batch 3 · Retrieval &amp; generation</a>
+      <a href="#phase-1-review">Review Phase 1</a>
+      <div class="nav-group">Phase 2 · Backend</div>
+      <a href="#batch-4">Batch 4 · Domain &amp; storage</a>
+      <a href="#batch-5">Batch 5 · Knowledge lifecycle</a>
+      <a href="#batch-6">Batch 6 · Jobs &amp; outbox</a>
+      <a href="#batch-7">Batch 7 · API &amp; Compose</a>
+      <a href="#batch-8">Batch 8 · Acceptance</a>
+      <a href="#phase-2-review">Review Phase 2</a>
+      <div class="nav-group">Tra cứu</div>
+      <a href="#dependency-rules">Dependency rules</a>
+      <a href="#review-template">Mẫu ghi review</a>
+    </nav>
+  </aside>
+
+  <main>
+    <header class="hero">
+      <h1>Vừa migration, vừa hiểu kiến trúc</h1>
+      <p>Tài liệu review duy nhất cho Batch 0–8, bao phủ P0–P2. Mỗi file được giải thích theo <strong>Vai trò → Input → Logic → Output → Failure</strong>, kèm luồng dữ liệu, dependency và câu hỏi review.</p>
+      <div class="chips">
+        <span class="chip">P0 · Audit</span>
+        <span class="chip">P1 · Generic RAG Core</span>
+        <span class="chip">P2 · Backend API</span>
+        <span class="chip">Offline · Không CDN</span>
+      </div>
+    </header>
+
+    <section id="how-to-use">
+      <div class="section-head">
+        <h2>Cách dùng tài liệu</h2>
+        <p class="muted">Đọc đúng thời điểm để tránh học kiến trúc chỉ trên giấy.</p>
+      </div>
+      <div class="grid three">
+        <article class="card searchable" data-search="trước batch mục tiêu file flow">
+          <h3>1 · Trước khi code</h3>
+          <p>Đọc mục tiêu batch, sơ đồ flow và cột “Tại sao”. Chỉ mở những file thuộc batch đó.</p>
+        </article>
+        <article class="card searchable" data-search="sau batch test diff failure input logic output">
+          <h3>2 · Sau khi code</h3>
+          <p>Đi từng dòng trong bảng file; trả lời được Input, Logic, Output, Failure rồi mới chạy Ruff/test.</p>
+        </article>
+        <article class="card searchable" data-search="sau phase architecture dependency gate acceptance">
+          <h3>3 · Sau phase</h3>
+          <p>Review luồng end-to-end, dependency direction, invariants và evidence trước khi mở phase kế tiếp.</p>
+        </article>
+      </div>
+      <div class="callout warn"><strong>Quy ước quan trọng:</strong> <span class="status done">ĐÃ KIỂM</span> nghĩa là có code và evidence đã chạy; <span class="status progress">ĐANG LÀM</span> là code draft chưa qua gate; <span class="status plan">TO-BE</span> là placeholder/kế hoạch, không được trình bày như tính năng đã tồn tại.</div>
+    </section>
+
+    <section id="status">
+      <h2>Trạng thái thực tế tại thời điểm tạo tài liệu</h2>
+      <div class="table-wrap">
+        <table>
+          <thead><tr><th>Phạm vi</th><th>Trạng thái</th><th>Evidence / giới hạn</th></tr></thead>
+          <tbody>
+            <tr data-search="batch 1 ingestion chunking 7 passed ruff"><td>Batch 1 · ingestion/chunking</td><td><span class="status done">ĐÃ KIỂM</span></td><td><code>ruff check src tests</code> pass; <code>7 passed</code>. Chưa phải live PDF/provider acceptance.</td></tr>
+            <tr data-search="batch 2 indexing draft"><td>Batch 2A/2B · indexing/adapters</td><td><span class="status progress">ĐANG LÀM</span></td><td>Core files và adapters đã có draft; test indexing chưa được ghi nhận pass tại thời điểm tạo tài liệu.</td></tr>
+            <tr data-search="batch 3 retrieval generation placeholder"><td>Batch 3 · retrieval/generation</td><td><span class="status plan">TO-BE</span></td><td>Các file đích hiện 0 dòng.</td></tr>
+            <tr data-search="phase 2 backend api worker outbox offline verified"><td>P2 · backend</td><td><span class="status done">OFFLINE_VERIFIED</span></td><td>Batch 6 jobs/outbox đạt 27 tests; Batch 7 API/migration đạt 32 tests; Batch 8 worker runtime và recovery đạt <code>36 passed</code>. Live Compose/provider gate chưa chạy nên chưa phải LIVE_ACCEPTED.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="callout danger"><strong>Không suy diễn:</strong> HTML structurally valid và 32 offline tests không chứng minh Qdrant, OpenAI, PostgreSQL, MinIO, Redis hoặc Celery đã được live-accepted.</div>
+    </section>
+
+    <section id="architecture">
+      <h2>Kiến trúc đích P0–P2</h2>
+      <div class="flow" aria-label="Luồng dữ liệu tổng quan">
+        <div class="node trust">HTTP Upload<small>Backend tự gán role/scope</small></div><div class="arrow">→</div>
+        <div class="node">StoredObject<small>MinIO + checksum</small></div><div class="arrow">→</div>
+        <div class="node">Contract / Knowledge<small>Hai domain identity riêng</small></div><div class="arrow">→</div>
+        <div class="node">RAG Core<small>ingest → chunk → index</small></div><div class="arrow">→</div>
+        <div class="node store">PostgreSQL + Qdrant<small>authority + vectors</small></div>
+      </div>
+      <h3>Dependency direction</h3>
+      <div class="flow">
+        <div class="node">Core models/services<small>Không biết FastAPI/DB</small></div><div class="arrow">→</div>
+        <div class="node trust">Ports<small>Protocol ổn định</small></div><div class="arrow">←</div>
+        <div class="node">Adapters<small>OpenAI/Qdrant/PyMuPDF</small></div><div class="arrow">←</div>
+        <div class="node store">Backend composition<small>DB/storage/auth/jobs</small></div>
+      </div>
+      <div class="callout"><strong>Ý nghĩa:</strong> core đưa ra thuật toán và contracts; backend quyết định quyền, lifecycle và provider. Core không được import ngược backend.</div>
+    </section>
+
+    <section id="review-rhythm">
+      <h2>Nhịp review</h2>
+      <div class="phase-strip">
+        <div class="phase"><strong>Code batch</strong><small>File flow → Ruff → unit test → diff → commit</small></div>
+        <div class="phase"><strong>Review phase</strong><small>End-to-end → boundaries → integration → report</small></div>
+        <div class="phase"><strong>Gate</strong><small>PASS mới mở phase phụ thuộc tiếp theo</small></div>
+      </div>
+      <pre>Code một batch
+  → đọc lại flow giữa file
+  → kiểm Input / Logic / Output / Failure
+  → Ruff + test
+  → review git diff
+  → commit
+
+Hoàn tất phase
+  → review kiến trúc end-to-end
+  → kiểm dependency boundaries và invariants
+  → integration/contract tests
+  → phase report + PASS/FAIL/BLOCKED</pre>
+    </section>
+
+    <section id="batch-0">
+      <h2>Batch 0 · P0 Audit &amp; Freeze Baseline</h2>
+      <p><span class="status progress">CHƯA HOÀN THIỆN TÀI LIỆU</span> Mục tiêu là biết chính xác copy gì trước khi đổi behavior.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>File / artifact</th><th>Vai trò</th><th class="io">Input → Logic → Output</th><th>Failure / câu hỏi review</th><th class="why">Tại sao tồn tại</th></tr></thead>
+        <tbody>
+          <tr data-search="source inventory sha dirty"><td class="file">source-inventory.md</td><td>Đóng băng source SHA + dirty tree.</td><td><b>In:</b> Git/source thật → <b>Logic:</b> kiểm kê tracked + untracked → <b>Out:</b> snapshot có thể tái hiện.</td><td>Thiếu untracked generic modules; copy nhầm cache/secret.</td><td>HEAD không đủ vì repo nguồn đang dirty.</td></tr>
+          <tr data-search="file decision matrix copy refactor legacy"><td class="file">file-decision-matrix.csv</td><td>Một quyết định cho mỗi file.</td><td>Old path → imports/callers/tests → new path + MOVE/REFACTOR/LEGACY.</td><td>Target trùng bị overwrite; UNKNOWN không có owner.</td><td>Ngăn copy mù cả <code>backend/app</code>.</td></tr>
+          <tr data-search="dependency map boundary"><td class="file">dependency-map.md</td><td>Vẽ hướng dependency hiện tại/đích.</td><td>Imports → nhóm layer → chỉ ra coupling UCP/MT/provider.</td><td>Core import backend hoặc provider SDK trong models.</td><td>Refactor location mà không sửa hướng dependency là migration giả.</td></tr>
+          <tr data-search="baseline tests not run"><td class="file">baseline-tests.md</td><td>Ghi lệnh và kết quả thật.</td><td>Commands → exit code/log → PASS/FAIL/NOT_RUN.</td><td>Thiếu dependency bị ghi nhầm PASS.</td><td>Tách lỗi môi trường khỏi lỗi source.</td></tr>
+          <tr data-search="api contract openapi"><td class="file">api-contract-v1.md</td><td>Chốt API trước handler.</td><td>Target endpoints + schemas + errors → contract review.</td><td>Frontend/backend đổi schema âm thầm.</td><td>Contract-first giảm rework ở P2/P4.</td></tr>
+          <tr data-search="rollback"><td class="file">rollback-plan.md</td><td>Điểm quay lại an toàn.</td><td>Commit boundaries + DB/provider isolation → rollback steps.</td><td>Rollback code nhưng không rollback DB/index.</td><td>Migration phải đảo ngược được theo phase.</td></tr>
+          <tr data-search="root compose env gitignore makefile"><td class="file"><a href="../compose.yaml">compose.yaml</a>, .env.example, Makefile</td><td>Composition và developer workflow.</td><td>Config placeholders → services/commands → repeatable local run.</td><td>Copy secret; command noop; dùng production resource.</td><td>Một entrypoint kiểm thử nhất quán.</td></tr>
+        </tbody>
+      </table></div>
+      <h3>Checklist review Batch 0</h3>
+      <ul class="checklist">
+        <li><label><input id="b0-1" type="checkbox"> Source SHA, branch và dirty files đã được ghi.</label></li>
+        <li><label><input id="b0-2" type="checkbox"> Mỗi file có disposition; không có UNKNOWN vô chủ.</label></li>
+        <li><label><input id="b0-3" type="checkbox"> Không copy .env, corpus, contract hoặc provider artifacts.</label></li>
+        <li><label><input id="b0-4" type="checkbox"> Baseline test ghi NOT_RUN nếu chưa chạy được.</label></li>
+      </ul>
+    </section>
+
+    <section id="batch-1">
+      <h2>Batch 1 · P1 Ingestion &amp; Chunking</h2>
+      <p><span class="status done">ĐÃ KIỂM: 7 TEST PASS</span> Chuyển file vật lý thành chunks traceable, không biết DB/API/provider.</p>
+      <div class="flow">
+        <div class="node"><a href="../rag-core/src/rag_core/ingestion/models.py">DocumentInput</a><small>path + source identity + role</small></div><div class="arrow">→</div>
+        <div class="node"><a href="../rag-core/src/rag_core/ingestion/loading.py">loading.py</a><small>format + checksum</small></div><div class="arrow">→</div>
+        <div class="node"><a href="../rag-core/src/rag_core/ingestion/extractors/text.py">extractors</a><small>file → blocks + spans</small></div><div class="arrow">→</div>
+        <div class="node"><a href="../rag-core/src/rag_core/ingestion/parsing.py">parsing.py</a><small>blocks → structure</small></div><div class="arrow">→</div>
+        <div class="node"><a href="../rag-core/src/rag_core/chunking/block.py">chunking</a><small>structure → chunks</small></div><div class="arrow">→</div>
+        <div class="node"><a href="../rag-core/src/rag_core/ingestion/service.py">service.py</a><small>orchestration result</small></div>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>File</th><th>Trạng thái / vai trò</th><th class="io">Input → Logic → Output</th><th>Failure / invariants</th><th class="why">Tại sao tách file</th></tr></thead>
+        <tbody>
+          <tr data-search="models invariants value objects role source span"><td class="file"><a href="../rag-core/src/rag_core/ingestion/models.py">models.py</a></td><td><span class="status done">CODE</span> Invariants và value objects.</td><td><b>In:</b> field values → <b>Logic:</b> Pydantic validate/freeze → <b>Out:</b> DocumentSource, blocks, spans, chunks, result.</td><td>Role chỉ contract/knowledge; checksum 64 hex; bbox/page fields theo nhóm; lineage không trộn source.</td><td>Mọi stage dùng chung một ngôn ngữ dữ liệu bất biến.</td></tr>
+          <tr data-search="errors typed error codes ocr layout checksum"><td class="file"><a href="../rag-core/src/rag_core/ingestion/errors.py">errors.py</a></td><td><span class="status done">CODE</span> Typed failures.</td><td>Failure condition → stable error code + safe message → backend mapping.</td><td>empty, signature, encoding, PDF, encryption, OCR, layout, checksum.</td><td>API không phải đoán lỗi từ chuỗi ValueError.</td></tr>
+          <tr data-search="loading format checksum validation sha signature"><td class="file"><a href="../rag-core/src/rag_core/ingestion/loading.py">loading.py</a></td><td><span class="status done">CODE</span> Format/checksum validation.</td><td><b>In:</b> DocumentInput/path → validate path/signature + SHA-256 → <b>Out:</b> immutable DocumentSource.</td><td>Missing/empty file, suffix-signature mismatch, checksum changed before extraction.</td><td>Tạo trust boundary trước khi đọc nội dung.</td></tr>
+          <tr data-search="ports extractor parser protocol"><td class="file"><a href="../rag-core/src/rag_core/ingestion/ports.py">ports.py</a></td><td><span class="status done">CODE</span> Extractor/parser Protocol.</td><td>Concrete adapter implements small interface; service chỉ gọi port.</td><td>Duplicate extractor được service reject; implementation sai shape bị type/test bắt.</td><td>Thay PDF/TXT adapter mà không sửa orchestration.</td></tr>
+          <tr data-search="text extractor utf8 paragraphs char offsets"><td class="file"><a href="../rag-core/src/rag_core/ingestion/extractors/text.py">extractors/text.py</a></td><td><span class="status done">CODE</span> TXT UTF-8 → paragraphs.</td><td>Bytes → UTF-8 decode → split paragraph → ExtractedBlock có exact char_start/end.</td><td>Invalid UTF-8, NUL/binary, whitespace-only.</td><td>Adapter format-specific; provenance char offsets là thật.</td></tr>
+          <tr data-search="pdf extractor pymupdf bbox ocr columns"><td class="file"><a href="../rag-core/src/rag_core/ingestion/extractors/pdf.py">extractors/pdf.py</a></td><td><span class="status done">CODE / CHƯA LIVE</span> PDF blocks + geometry.</td><td>PyMuPDF pages → positioned text blocks → SourceSpan page/bbox/dimensions.</td><td>Encrypted/invalid/empty; no text → OCR_REQUIRED; multi-column heuristic → LAYOUT_UNSUPPORTED.</td><td>Giữ layout adapter ngoài domain; không bịa bbox.</td></tr>
+          <tr data-search="docling optional placeholder"><td class="file"><a href="../rag-core/src/rag_core/ingestion/extractors/docling.py">extractors/docling.py</a></td><td><span class="status plan">PLACEHOLDER</span> Optional extractor.</td><td>Chưa có behavior.</td><td>Không được mount hoặc ghi implemented.</td><td>Docling không là gate Release A.</td></tr>
+          <tr data-search="parsing flat structure fallback"><td class="file"><a href="../rag-core/src/rag_core/ingestion/parsing.py">parsing.py</a></td><td><span class="status done">CODE</span> Safe structural fallback.</td><td>ExtractedDocument → một section theo filename → StructuredDocument.</td><td>Không suy đoán heading/clause.</td><td>Parser generic không chứa UCP Article/MT field.</td></tr>
+          <tr data-search="service orchestrator processor composition"><td class="file"><a href="../rag-core/src/rag_core/ingestion/service.py">service.py</a></td><td><span class="status done">CODE</span> Orchestration, không provider/DB.</td><td>DocumentInput → load → select extractor → parse → chunk → DocumentProcessingResult.</td><td>No extractor, no sections, no chunks; không catch/che typed error.</td><td>Giữ use case flow tách khỏi từng thuật toán.</td></tr>
+          <tr data-search="chunk ports strategy protocol"><td class="file"><a href="../rag-core/src/rag_core/chunking/ports.py">chunking/ports.py</a></td><td><span class="status done">CODE</span> ChunkingStrategy Protocol.</td><td>StructuredDocument → tuple DocumentChunk.</td><td>Consumer không phụ thuộc concrete strategy.</td><td>Research/backend có thể inject chiến lược.</td></tr>
+          <tr data-search="block chunk deterministic provenance"><td class="file"><a href="../rag-core/src/rag_core/chunking/block.py">chunking/block.py</a></td><td><span class="status done">CODE</span> Group whole blocks.</td><td>Sections → pack blocks dưới max chars → deterministic chunks + nguyên spans.</td><td>Block lớn hơn limit; duplicate/no chunks.</td><td>Ưu tiên provenance hơn cắt text mù.</td></tr>
+          <tr data-search="fixed structure aware placeholder"><td class="file"><a href="../rag-core/src/rag_core/chunking/fixed.py">fixed.py</a> / <a href="../rag-core/src/rag_core/chunking/structure_aware.py">structure_aware.py</a></td><td><span class="status plan">PLACEHOLDER</span> Chiến lược P1/P6.</td><td>Chưa có behavior.</td><td>Không được tính là implemented; cần tests text loss/overlap/provenance.</td><td>Dành cho baseline và cấu trúc thật, không chặn Batch 1 hiện tại.</td></tr>
+          <tr data-search="test pipeline unit"><td class="file"><a href="../rag-core/tests/unit/test_document_pipeline.py">test_document_pipeline.py</a></td><td><span class="status done">7 PASS</span> Unit contract.</td><td>Temporary TXT + fakes → processor → assertions về text, checksum, spans và failures.</td><td>Không thay thế PDF/live/provider integration.</td><td>Khóa behavior khi đổi package/import.</td></tr>
+          <tr data-search="docker compose pyproject package"><td class="file"><a href="../rag-core/Dockerfile">Dockerfile</a> / <a href="../rag-core/pyproject.toml">pyproject.toml</a></td><td><span class="status done">DEV RUNNER</span> Package + Compose test image.</td><td>Package metadata/extras → image → pytest/Ruff one-shot.</td><td>Sửa dependency cần rebuild; bind mount chỉ cập nhật source.</td><td>Không cần host venv, giữ Python 3.11 nhất quán.</td></tr>
+        </tbody>
+      </table></div>
+      <h3>Câu hỏi review Batch 1</h3>
+      <ul class="checklist">
+        <li><label><input id="b1-1" type="checkbox"> Tôi giải thích được vì sao role do backend cấp, extractor không cấp.</label></li>
+        <li><label><input id="b1-2" type="checkbox"> Tôi trace được một đoạn TXT từ char offsets đến DocumentChunk.</label></li>
+        <li><label><input id="b1-3" type="checkbox"> Tôi phân biệt được OCR_REQUIRED với LAYOUT_UNSUPPORTED.</label></li>
+        <li><label><input id="b1-4" type="checkbox"> Tôi hiểu vì sao service chỉ orchestration và ports tách concrete adapter.</label></li>
+      </ul>
+    </section>
+
+    <section id="batch-2a">
+      <h2>Batch 2A · P1 Indexing Core</h2>
+      <p><span class="status progress">ĐANG LÀM</span> Validate chunks/vectors trước khi giao cho vector-store port.</p>
+      <div class="flow">
+        <div class="node">DocumentChunk<small>text + lineage</small></div><div class="arrow">→</div>
+        <div class="node"><a href="../rag-core/src/rag_core/indexing/service.py">DocumentIndexingService</a><small>validate + build text</small></div><div class="arrow">→</div>
+        <div class="node trust"><a href="../rag-core/src/rag_core/indexing/ports.py">EmbeddingProvider</a><small>texts → vectors</small></div><div class="arrow">→</div>
+        <div class="node trust"><a href="../rag-core/src/rag_core/indexing/ports.py">VectorIndex</a><small>chunks + vectors</small></div><div class="arrow">→</div>
+        <div class="node">IndexingResult<small>verified outcome</small></div>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>File</th><th>Vai trò</th><th class="io">Input → Logic → Output</th><th>Failure / review</th><th class="why">Tại sao</th></tr></thead>
+        <tbody>
+          <tr data-search="index models statuses snapshot"><td class="file"><a href="../rag-core/src/rag_core/indexing/models.py">models.py</a></td><td>IndexingResult và snapshot inspection.</td><td>Verified counts/identity → frozen result/status.</td><td>Count/dimension phải dương; checksum hợp lệ.</td><td>Không trả dict provider-specific ra core.</td></tr>
+          <tr data-search="index ports embedding vector"><td class="file"><a href="../rag-core/src/rag_core/indexing/ports.py">ports.py</a></td><td>EmbeddingProvider, VectorIndex, IndexableChunk.</td><td>Protocol mô tả shape tối thiểu mà service cần.</td><td>Không import OpenAI/Qdrant.</td><td>Cho fake providers và nhiều adapter.</td></tr>
+          <tr data-search="index errors conflict verification"><td class="file"><a href="../rag-core/src/rag_core/indexing/errors.py">errors.py</a></td><td>Conflict/verification failures.</td><td>Stale/conflicting snapshot → typed exception.</td><td>Không overwrite immutable source version.</td><td>Fail loud thay vì phục vụ evidence cũ.</td></tr>
+          <tr data-search="payload schema provenance metadata"><td class="file"><a href="../rag-core/src/rag_core/indexing/payloads.py">payloads.py</a></td><td>Encode payload schema versioned.</td><td>IndexableChunk → JSON-compatible identity/text/spans/metadata.</td><td>Không phát article_number, KB membership hoặc fake span.</td><td>Một contract chung cho adapters/retrieval.</td></tr>
+          <tr data-search="index service dimensions finite duplicate"><td class="file"><a href="../rag-core/src/rag_core/indexing/service.py">service.py</a></td><td>Provider-neutral indexing use case.</td><td>Chunks → validate one snapshot/IDs → embedding texts → validate vectors → upsert.</td><td>Empty/mixed snapshot, duplicate ID, count/dimension mismatch, NaN/Inf.</td><td>Provider chỉ nhận dữ liệu đã qua invariant.</td></tr>
+        </tbody>
+      </table></div>
+      <h3>Gate Batch 2A</h3>
+      <ul class="checklist">
+        <li><label><input id="b2a-1" type="checkbox"> Test fake embedding chứng minh exact ordering và dimensions.</label></li>
+        <li><label><input id="b2a-2" type="checkbox"> Payload không còn Article/MT/knowledge_base_id top-level.</label></li>
+        <li><label><input id="b2a-3" type="checkbox"> Mixed source/version/checksum/scope bị reject trước provider.</label></li>
+      </ul>
+    </section>
+
+    <section id="batch-2b">
+      <h2>Batch 2B · P1 Provider Adapters</h2>
+      <p><span class="status progress">DRAFT · CHƯA GATE</span> SDK được giữ ngoài models/services.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>File</th><th>Vai trò</th><th class="io">Input → Logic → Output</th><th>Failure / debt hiện tại</th><th class="why">Tại sao</th></tr></thead>
+        <tbody>
+          <tr data-search="openai embeddings adapter langchain debt"><td class="file"><a href="../rag-core/src/rag_core/adapters/openai_embeddings.py">openai_embeddings.py</a></td><td>Implement EmbeddingProvider bằng OpenAI.</td><td>Tuple texts → SDK call → ordered numeric vectors.</td><td><span class="status blocked">DEBT</span> Hiện vẫn dùng <code>langchain_openai</code>; cần đổi sang OpenAI SDK optional.</td><td>Provider SDK không được lan vào indexing service.</td></tr>
+          <tr data-search="qdrant adapter immutable snapshot filter"><td class="file"><a href="../rag-core/src/rag_core/adapters/qdrant.py">qdrant.py</a></td><td>Implement VectorIndex.</td><td>Chunks/vectors → exact identity filter → inspect/upsert/verify → IndexingResult.</td><td>Phải thêm index_profile, collection validation, conflict/idempotency tests; không gọi cloud trong unit test.</td><td>Cô lập Qdrant payload/query behavior.</td></tr>
+          <tr data-search="openai chat placeholder"><td class="file"><a href="../rag-core/src/rag_core/adapters/openai_chat.py">openai_chat.py</a></td><td><span class="status plan">PLACEHOLDER</span> Generation adapter.</td><td>Chưa có behavior; thuộc Batch 3.</td><td>Không import eager từ package root.</td><td>Giữ chat SDK ngoài generation core.</td></tr>
+        </tbody>
+      </table></div>
+      <div class="callout warn"><strong>Review trọng tâm:</strong> import <code>rag_core</code> phải chạy khi không cài OpenAI/Qdrant. Optional adapter chỉ fail khi chính adapter được import/khởi tạo.</div>
+    </section>
+
+    <section id="batch-3">
+      <h2>Batch 3 · P1 Retrieval &amp; Grounded Generation</h2>
+      <p><span class="status plan">TO-BE · FILES 0 DÒNG</span> Flow dưới đây là target để review sau khi implement.</p>
+      <div class="flow">
+        <div class="node store">Resolved source tuples<small>scope/id/version/checksum</small></div><div class="arrow">→</div>
+        <div class="node"><a href="../rag-core/src/rag_core/retrieval/dense.py">Dense retrieval</a><small>query + exact filter</small></div><div class="arrow">→</div>
+        <div class="node">KnowledgeHit[]<small>validated lineage</small></div><div class="arrow">→</div>
+        <div class="node"><a href="../rag-core/src/rag_core/generation/context.py">Context</a><small>[S1] mapped sections</small></div><div class="arrow">→</div>
+        <div class="node"><a href="../rag-core/src/rag_core/generation/service.py">Generation service</a><small>answer + citations/abstain</small></div>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>File</th><th>Vai trò mục tiêu</th><th class="io">Input → Logic → Output</th><th>Failure / invariant</th><th class="why">Tại sao</th></tr></thead>
+        <tbody>
+          <tr data-search="retrieval models scope hit checksum"><td class="file"><a href="../rag-core/src/rag_core/retrieval/models.py">retrieval/models.py</a></td><td>RetrievalRequest, exact source scope, KnowledgeHit.</td><td>Query + resolved scopes → typed ranked hits.</td><td>Scope bắt buộc có checksum; score finite; spans/page range thật.</td><td>Lineage là contract độc lập provider.</td></tr>
+          <tr data-search="retrieval ports protocol"><td class="file"><a href="../rag-core/src/rag_core/retrieval/ports.py">retrieval/ports.py</a></td><td>Retriever/vector query ports.</td><td>Request → tuple hits.</td><td>Provider không được trả hit ngoài requested set.</td><td>Fake/offline tests và adapter swap.</td></tr>
+          <tr data-search="dense retrieval exact filters"><td class="file"><a href="../rag-core/src/rag_core/retrieval/dense.py">retrieval/dense.py</a></td><td>Dense ranking/validation, không Qdrant SDK.</td><td>Query vector/results → validate lineage → deterministic rank.</td><td>Empty hits hợp lệ; invalid payload fail closed.</td><td>Tách thuật toán khỏi provider decode.</td></tr>
+          <tr data-search="retrieval service orchestration"><td class="file"><a href="../rag-core/src/rag_core/retrieval/service.py">retrieval/service.py</a></td><td>Orchestrate one/multi-source retrieval.</td><td>Resolved scopes → per-source query → merge/dedupe/limit.</td><td>Không tự quyết định KB/applicability.</td><td>Backend sở hữu authority; core sở hữu retrieval mechanics.</td></tr>
+          <tr data-search="sparse hybrid fusion reranking release c"><td class="file"><a href="../rag-core/src/rag_core/retrieval/sparse.py">sparse.py</a>, <a href="../rag-core/src/rag_core/retrieval/hybrid.py">hybrid.py</a>, <a href="../rag-core/src/rag_core/retrieval/fusion.py">fusion.py</a>, <a href="../rag-core/src/rag_core/retrieval/reranking.py">reranking.py</a></td><td><span class="status plan">P6 PLACEHOLDERS</span></td><td>Chưa có behavior.</td><td>Không dùng tên file làm bằng chứng implemented.</td><td>Research Release C; không chặn A/B.</td></tr>
+          <tr data-search="generation models grounded answer citation trace"><td class="file"><a href="../rag-core/src/rag_core/generation/models.py">generation/models.py</a></td><td>GroundedAnswer, Citation, ExecutionTrace.</td><td>Validated hits/answer → immutable output contracts.</td><td>Citation phải map hit; không evidence phải abstain.</td><td>Output không phụ thuộc LangChain/OpenAI DTO.</td></tr>
+          <tr data-search="generation ports answer generator"><td class="file"><a href="../rag-core/src/rag_core/generation/ports.py">generation/ports.py</a></td><td>AnswerGenerator protocol.</td><td>Question + rendered context → answer text/structured response.</td><td>Provider exception đi lên consumer; không biến thành legal outcome.</td><td>Fake generator cho deterministic tests.</td></tr>
+          <tr data-search="context prompt citations service generation"><td class="file"><a href="../rag-core/src/rag_core/generation/context.py">context.py</a>, <a href="../rag-core/src/rag_core/generation/prompt.py">prompt.py</a>, <a href="../rag-core/src/rag_core/generation/citations.py">citations.py</a>, <a href="../rag-core/src/rag_core/generation/service.py">service.py</a></td><td>Context → prompt → validate citations → result.</td><td>Hits gắn nhãn [S1..] → provider-neutral prompt → answer labels → exact citations.</td><td>Unknown/missing labels; zero hits; provider failure; không bịa spans.</td><td>Tách policy/render/validation/orchestration để test riêng.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="phase-1-review">
+      <h2>Review cuối Phase 1 · Core Gate</h2>
+      <pre>DocumentInput
+  → loading.py: identity + checksum
+  → extractor: physical file → exact blocks/spans
+  → parser: blocks → explicit structure
+  → chunker: structure → deterministic chunks
+  → indexing service: chunks → validated vectors
+  → vector adapter: immutable snapshot
+  → retrieval: exact source tuples → validated hits
+  → generation: hits → context → answer → citation mapping</pre>
+      <div class="grid two">
+        <div class="card"><h3>Phải trả lời được</h3><ul><li>Lineage bắt đầu ở đâu và được kiểm ở đâu?</li><li>Provider SDK bị chặn ở boundary nào?</li><li>Zero evidence khác provider failure thế nào?</li><li>Vì sao core không được biết KB membership?</li></ul></div>
+        <div class="card"><h3>Gate P1</h3><ul class="checklist"><li><label><input id="p1-1" type="checkbox"> Clean install/import không DB/API/Celery.</label></li><li><label><input id="p1-2" type="checkbox"> Không UCP/MT mandatory.</label></li><li><label><input id="p1-3" type="checkbox"> TXT + one-column PDF offline smoke.</label></li><li><label><input id="p1-4" type="checkbox"> Boundary + unit tests pass.</label></li></ul></div>
+      </div>
+    </section>
+
+    <section id="batch-4">
+      <h2>Batch 4 · P2 Config, Storage &amp; Contract Domain</h2>
+      <p><span class="status plan">TO-BE · BACKEND FILES 0 DÒNG</span></p>
+      <div class="flow">
+        <div class="node trust">Contract upload<small>server role/scope</small></div><div class="arrow">→</div>
+        <div class="node"><a href="../compliance-agent/backend/app/documents/storage.py">StoredObject</a><small>binary identity</small></div><div class="arrow">→</div>
+        <div class="node"><a href="../compliance-agent/backend/app/contracts/models.py">ContractDocument</a><small>domain identity</small></div><div class="arrow">→</div>
+        <div class="node"><a href="../compliance-agent/backend/app/contracts/clause_segmenter.py">ClauseSegmenter</a><small>paragraph/block fallback</small></div><div class="arrow">→</div>
+        <div class="node">ReviewUnit[]<small>text + real spans</small></div>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>File group</th><th>Vai trò mục tiêu</th><th class="io">Input → Logic → Output</th><th>Failure / invariant</th><th class="why">Tại sao</th></tr></thead>
+        <tbody>
+          <tr data-search="core config constants logging scope env"><td class="file"><a href="../compliance-agent/backend/app/core/config.py">core/config.py</a>, <a href="../compliance-agent/backend/app/core/constants.py">constants.py</a>, <a href="../compliance-agent/backend/app/core/logging.py">logging.py</a></td><td>Validated settings/defaults/redacted logging.</td><td>ENV → Pydantic validation → trusted runtime config.</td><td>Required scope/secrets; no UCP/MT defaults; không log URLs/keys.</td><td>Một composition boundary cho provider/app config.</td></tr>
+          <tr data-search="db base session transaction"><td class="file"><a href="../compliance-agent/backend/app/db/base.py">db/base.py</a>, <a href="../compliance-agent/backend/app/db/session.py">session.py</a></td><td>SQLAlchemy metadata, engine, transaction scope.</td><td>DATABASE_URL → engine/session → commit hoặc rollback.</td><td>Rollback on exception; không mở transaction xuyên provider call dài.</td><td>Repository/service không tự quản lý connection rời rạc.</td></tr>
+          <tr data-search="documents models stored object"><td class="file"><a href="../compliance-agent/backend/app/documents/models.py">documents/models.py</a>, <a href="../compliance-agent/backend/app/documents/db_models.py">db_models.py</a></td><td>StoredObject binary identity.</td><td>Object metadata/checksum → domain/ORM records.</td><td>Không chứa role/scope domain; safe ref lifecycle.</td><td>Deduplicate binary nhưng không hợp nhất contract/knowledge identity.</td></tr>
+          <tr data-search="documents storage minio repository ingestion"><td class="file"><a href="../compliance-agent/backend/app/documents/storage.py">storage.py</a>, <a href="../compliance-agent/backend/app/documents/repository.py">repository.py</a>, <a href="../compliance-agent/backend/app/documents/ingestion_service.py">ingestion_service.py</a></td><td>Stream/verify/persist binary.</td><td>Upload stream → MIME/signature/size/SHA → MinIO + DB StoredObject.</td><td>Partial upload, checksum mismatch, DB/storage rollback, safe GC.</td><td>Storage lifecycle tách khỏi contract/knowledge semantics.</td></tr>
+          <tr data-search="contracts models db repository role immutable"><td class="file"><a href="../compliance-agent/backend/app/contracts/models.py">contracts/models.py</a>, <a href="../compliance-agent/backend/app/contracts/db_models.py">db_models.py</a>, <a href="../compliance-agent/backend/app/contracts/repository.py">repository.py</a></td><td>ContractDocument + ReviewUnit domain.</td><td>StoredObject + trusted scope → immutable contract → query/persist units.</td><td>Role literal contract; version/revision conflict; scoped lookup.</td><td>Không tái dùng MT700 ContractClause schema.</td></tr>
+          <tr data-search="clause segmenter processing service"><td class="file"><a href="../compliance-agent/backend/app/contracts/clause_segmenter.py">clause_segmenter.py</a>, <a href="../compliance-agent/backend/app/contracts/processing_service.py">processing_service.py</a></td><td>Generic segmentation + contract processing use case.</td><td>Core extraction → section/paragraph/block units → persist revision/status.</td><td>Partial/unreadable/OCR/layout; không bịa labels/bbox.</td><td>Hợp đồng không bắt buộc MT700 fields.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="batch-5">
+      <h2>Batch 5 · P2 Knowledge Lifecycle</h2>
+      <p><span class="status plan">TO-BE · FILES 0 DÒNG</span> PostgreSQL là authority; Qdrant chỉ là vector index.</p>
+      <div class="flow">
+        <div class="node">Knowledge upload<small>role=knowledge</small></div><div class="arrow">→</div>
+        <div class="node">KnowledgeDocument<small>domain identity</small></div><div class="arrow">→</div>
+        <div class="node">SourceSnapshot<small>version/checksum/profile</small></div><div class="arrow">→</div>
+        <div class="node store">Qdrant vectors<small>one immutable snapshot</small></div><div class="arrow">↔</div>
+        <div class="node trust">KB Memberships<small>many-to-many in PostgreSQL</small></div>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>File</th><th>Vai trò mục tiêu</th><th class="io">Input → Logic → Output</th><th>Failure / invariant</th><th class="why">Tại sao</th></tr></thead>
+        <tbody>
+          <tr data-search="knowledge models db models"><td class="file"><a href="../compliance-agent/backend/app/knowledge/models.py">models.py</a>, <a href="../compliance-agent/backend/app/knowledge/db_models.py">db_models.py</a></td><td>KnowledgeDocument, KB, snapshot, membership.</td><td>Trusted metadata → immutable/versioned entities.</td><td>Role knowledge; no cross-scope membership; READY phải verified.</td><td>Phân biệt source identity với nhóm KB.</td></tr>
+          <tr data-search="knowledge repository registry postgres authority"><td class="file"><a href="../compliance-agent/backend/app/knowledge/repository.py">repository.py</a>, <a href="../compliance-agent/backend/app/knowledge/registry.py">registry.py</a></td><td>Persistence và resolve KB → exact source tuples.</td><td>KB ID + scope → active memberships/snapshots.</td><td>Missing/not-ready/stale membership fail closed.</td><td>Không dùng YAML/Qdrant làm quyền runtime.</td></tr>
+          <tr data-search="knowledge ingestion indexing"><td class="file"><a href="../compliance-agent/backend/app/knowledge/ingestion_service.py">ingestion_service.py</a>, <a href="../compliance-agent/backend/app/knowledge/indexing_service.py">indexing_service.py</a></td><td>Upload → core processing → immutable index.</td><td>KnowledgeDocument → chunks → embed/index → verified snapshot/membership READY.</td><td>Idempotency; provider failure; conflicting checksum/profile.</td><td>Thêm KB membership không re-embed cùng snapshot.</td></tr>
+          <tr data-search="knowledge retrieval service exact filters"><td class="file"><a href="../compliance-agent/backend/app/knowledge/retrieval_service.py">retrieval_service.py</a></td><td>Authorized KB retrieval composition.</td><td>Selected KB → PG tuples → core/Qdrant query → validate hits.</td><td>Zero hits = insufficient evidence; ngoài tuple bị reject.</td><td>Authority trước similarity.</td></tr>
+          <tr data-search="reference service full unit spans"><td class="file"><a href="../compliance-agent/backend/app/knowledge/reference_service.py">reference_service.py</a></td><td>Trả full reference unit nguyên văn.</td><td>Source/unit ID → persisted text + exact spans.</td><td>Missing span remains unavailable; không Article-specific.</td><td>Search chunk và authoritative reference là hai nhu cầu khác nhau.</td></tr>
+          <tr data-search="applicability phase 3"><td class="file"><a href="../compliance-agent/backend/app/knowledge/applicability.py">applicability.py</a></td><td><span class="status plan">P3 OWNER</span> Applicability policy.</td><td>Chưa thuộc Release A runtime.</td><td>Không kết luận no applicable từ similarity thấp.</td><td>Domain review, không retrieval mechanics.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="batch-6">
+      <h2>Batch 6 · P2 Jobs, Transactional Outbox &amp; Worker</h2>
+      <p><span class="status done">ĐÃ KIỂM · 27 PASSED</span> Job state, outbox, lease và duplicate recovery đã có offline evidence.</p>
+      <div class="flow">
+        <div class="node trust">Domain transaction<small>create resource/job</small></div><div class="arrow">→</div>
+        <div class="node store">jobs + outbox_events<small>same DB commit</small></div><div class="arrow">→</div>
+        <div class="node">Outbox relay<small>claim/publish/ack</small></div><div class="arrow">→</div>
+        <div class="node">Celery {job_id}<small>untrusted delivery</small></div><div class="arrow">→</div>
+        <div class="node">Worker claim/lease<small>DB payload + CAS result</small></div>
+      </div>
+      <div class="table-wrap"><table>
+        <thead><tr><th>File</th><th>Vai trò mục tiêu</th><th class="io">Input → Logic → Output</th><th>Failure / invariant</th><th class="why">Tại sao</th></tr></thead>
+        <tbody>
+          <tr data-search="jobs models statuses retry"><td class="file"><a href="../compliance-agent/backend/app/jobs/models.py">jobs/models.py</a></td><td>JobKind/Status/Stage/payload/result contracts.</td><td>Domain request → durable job DTO.</td><td>Status chỉ queued/running/retry/succeeded/failed; technical khác domain outcome.</td><td>Một lifecycle kỹ thuật thống nhất.</td></tr>
+          <tr data-search="jobs db models repository lease attempt"><td class="file"><a href="../compliance-agent/backend/app/jobs/db_models.py">db_models.py</a>, <a href="../compliance-agent/backend/app/jobs/repository.py">repository.py</a></td><td>ORM và atomic queries.</td><td>Job ID/scope → lock/claim/update CAS.</td><td>Stale attempt/active lease/duplicate active job.</td><td>At-least-once delivery cần DB ownership.</td></tr>
+          <tr data-search="job service transaction idempotency"><td class="file"><a href="../compliance-agent/backend/app/jobs/service.py">service.py</a></td><td>Create/read/transition job.</td><td>Validated payload → job + outbox in one transaction.</td><td>Conflict, invalid transition, retry exhaustion.</td><td>Không để API/worker tự sửa status tùy ý.</td></tr>
+          <tr data-search="outbox model dispatcher reconciler"><td class="file"><a href="../compliance-agent/backend/app/jobs/outbox_models.py">outbox_models.py</a>, <a href="../compliance-agent/backend/app/jobs/outbox_dispatcher.py">outbox_dispatcher.py</a>, <a href="../compliance-agent/backend/app/jobs/reconciler.py">reconciler.py</a></td><td>Durable publication/recovery.</td><td>Pending event → claim → publish job_id → ack/retry; scan stuck/expired.</td><td>Crash after commit, Redis down, duplicate publish, stuck claims.</td><td>Đóng “DB commit → broker publish” crash gap.</td></tr>
+          <tr data-search="worker celery dispatcher runtime tasks handlers"><td class="file"><a href="../compliance-agent/backend/app/worker/celery_app.py">celery_app.py</a>, <a href="../compliance-agent/backend/app/worker/dispatcher.py">dispatcher.py</a>, <a href="../compliance-agent/backend/app/worker/runtime.py">runtime.py</a>, <a href="../compliance-agent/backend/app/worker/handlers.py">handlers.py</a>, <a href="../compliance-agent/backend/app/worker/tasks.py">tasks.py</a></td><td>Broker wiring, composition và task execution.</td><td>Message job_id → commit claim/lease → trusted DB payload → download/process → atomic domain + job result.</td><td>Timeout/retry, stale attempts, sanitized error, idempotency; crash sau claim được reconciler phục hồi.</td><td>Broker message không phải trust source; claim phải commit trước external work.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="batch-7">
+      <h2>Batch 7 · P2 FastAPI, Migration &amp; Compose</h2>
+      <p><span class="status done">ĐÃ KIỂM · 32 PASSED</span> Release A OpenAPI/API contract và offline lifecycle đã qua gate; live providers chưa được chứng minh.</p>
+      <div class="table-wrap"><table>
+        <thead><tr><th>File group</th><th>Vai trò mục tiêu</th><th class="io">Input → Logic → Output</th><th>Failure / review</th><th class="why">Tại sao</th></tr></thead>
+        <tbody>
+          <tr data-search="main lifespan routes"><td class="file"><a href="../compliance-agent/backend/app/main.py">main.py</a></td><td>FastAPI composition/lifespan/router registration.</td><td>Settings → create runtimes → mount Release A routes → close resources.</td><td>Không khởi tạo paid provider ngoài mode; không mount review/rag giả.</td><td>Một composition root HTTP.</td></tr>
+          <tr data-search="api dependencies runtime"><td class="file"><a href="../compliance-agent/backend/app/api/dependencies.py">api/dependencies.py</a>, <a href="../compliance-agent/backend/app/api/runtime.py">runtime.py</a></td><td>Trusted scope và service injection.</td><td>Server settings/app state → scoped services.</td><td>Không lấy tenant/scope từ client.</td><td>Authorization boundary không nằm trong LLM/request body.</td></tr>
+          <tr data-search="contracts routes"><td class="file"><a href="../compliance-agent/backend/app/api/routes/contracts.py">routes/contracts.py</a></td><td>Upload/get/process/review-units endpoints.</td><td>Multipart/path ID → validate → domain service/job → typed response.</td><td>400/404/409/415/422/503; không expose clauses/review jobs ở A.</td><td>HTTP translation, không chứa parsing logic.</td></tr>
+          <tr data-search="knowledge routes"><td class="file"><a href="../compliance-agent/backend/app/api/routes/knowledge.py">routes/knowledge.py</a></td><td>Create/list/get KB, upload knowledge.</td><td>Request → trusted role/scope → lifecycle services.</td><td>Not-ready/conflict/unsupported/cross-scope.</td><td>Dynamic KB thay hard-coded UCP source.</td></tr>
+          <tr data-search="jobs health routes"><td class="file"><a href="../compliance-agent/backend/app/api/routes/jobs.py">routes/jobs.py</a>, <a href="../compliance-agent/backend/app/api/routes/health.py">routes/health.py</a></td><td>Job status và liveness/readiness.</td><td>ID/dependency checks → discriminated job response/health.</td><td>live không phụ thuộc provider; ready có timeout và evidence thật.</td><td>Vận hành phân biệt process sống với hệ thống sẵn sàng.</td></tr>
+          <tr data-search="rag review routes not release a"><td class="file"><a href="../compliance-agent/backend/app/api/routes/rag.py">routes/rag.py</a>, <a href="../compliance-agent/backend/app/api/routes/review.py">routes/review.py</a></td><td><span class="status plan">KHÔNG MOUNT Ở A</span></td><td>Thuộc optional/P3.</td><td>Không trả success giả từ placeholder.</td><td>API chỉ quảng bá capability đã implement.</td></tr>
+          <tr data-search="alembic migration env schema"><td class="file"><a href="../compliance-agent/backend/migrations/env.py">migrations/env.py</a> + versions/</td><td>Clean DB schema evolution.</td><td>SQLAlchemy metadata → initial revision → upgrade DB test.</td><td>Không copy MT700 legacy migration; không chạy DB đang dùng.</td><td>Clean install chứng minh schema đích tự đủ.</td></tr>
+          <tr data-search="scripts preflight index smoke"><td class="file"><a href="../compliance-agent/backend/scripts/preflight.py">preflight.py</a>, <a href="../compliance-agent/backend/scripts/index_knowledge.py">index_knowledge.py</a>, <a href="../compliance-agent/backend/scripts/smoke_e2e.py">smoke_e2e.py</a></td><td>Operational checks và bounded CLI.</td><td>Validated config/test fixture → safe checks/jobs → explicit exit status.</td><td>Không in secret; không tự gọi paid/live resource.</td><td>Repeatable acceptance evidence ngoài manual clicks.</td></tr>
+          <tr data-search="compose services postgres redis minio qdrant backend worker outbox"><td class="file"><a href="../compose.yaml">compose.yaml</a></td><td>Local topology.</td><td>Images/env/health → Postgres, Redis, MinIO, Qdrant, backend, worker, relay.</td><td>Root build context; no .env copy; profiles test/live.</td><td>Package core/backend cùng build context và dependency readiness.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="batch-8">
+      <h2>Batch 8 · P2 Release A Acceptance</h2>
+      <p><span class="status done">OFFLINE_VERIFIED · 36 PASSED</span> Worker runtime, domain handlers và dedicated <a href="../compliance-agent/backend/scripts/job_maintenance.py">job-maintenance relay/reconciler</a> đã qua bốn E2E tests offline. Chưa có live-provider evidence.</p>
+      <div class="grid two">
+        <div class="card">
+          <h3>Test matrix</h3>
+          <ul class="checklist">
+            <li><label><input id="b8-1" type="checkbox"> Clean core/backend install và boundary checks.</label></li>
+            <li><label><input id="b8-2" type="checkbox"> TXT + one-column PDF contract/knowledge flow.</label></li>
+            <li><label><input id="b8-3" type="checkbox"> OCR/layout/format/checksum negative paths.</label></li>
+            <li><label><input id="b8-4" type="checkbox"> Clean DB migration + role constraints.</label></li>
+            <li><label><input id="b8-5" type="checkbox" checked> Same blob, separate domain identities.</label></li>
+            <li><label><input id="b8-6" type="checkbox" checked> Two KB memberships reuse one vector snapshot.</label></li>
+            <li><label><input id="b8-7" type="checkbox" checked> Outbox crash/duplicate/stale-attempt recovery.</label></li>
+            <li><label><input id="b8-8" type="checkbox" checked> OpenAPI matches Release A endpoints.</label></li>
+          </ul>
+        </div>
+        <div class="card">
+          <h3>Acceptance language</h3>
+          <p><strong>OFFLINE_VERIFIED:</strong> fake/local tests pass.</p>
+          <p><strong>LIVE_BLOCKED:</strong> thiếu credential/environment/permission.</p>
+          <p><strong>LIVE_ACCEPTED:</strong> provider/infrastructure thật đã chạy với assertions và artifacts.</p>
+          <p><strong>Không đồng nghĩa:</strong> legal correctness, public production security, multi-tenant AuthN/AuthZ hoặc semantic entailment.</p>
+        </div>
+      </div>
+    </section>
+
+    <section id="phase-2-review">
+      <h2>Review cuối Phase 2 · Backend Gate</h2>
+      <pre>HTTP multipart/JSON
+  → routes: parse + translate errors
+  → dependencies: server-resolved SYSTEM_ACCESS_SCOPE
+  → domain service + DB transaction
+  → StoredObject / ContractDocument / KnowledgeDocument
+  → job + outbox event (same commit)
+  → relay publishes only {job_id}
+  → worker claims attempt/lease and loads trusted DB payload
+  → rag-core processing/indexing/retrieval
+  → PostgreSQL/Qdrant/MinIO verified result
+  → typed job/resource response</pre>
+      <div class="callout ok"><strong>P2 hiểu đúng khi:</strong> bạn giải thích được vì sao PostgreSQL quyết định membership/quyền, Qdrant chỉ tìm vectors; vì sao broker message không chứa trusted payload; và vì sao binary dedup không hợp nhất document identity.</div>
+    </section>
+
+    <section id="dependency-rules">
+      <h2>Dependency rules phải thuộc lòng</h2>
+      <div class="table-wrap"><table>
+        <thead><tr><th>Module</th><th>Được import</th><th>Cấm import / sở hữu</th></tr></thead>
+        <tbody>
+          <tr data-search="rag core boundary"><td><code>rag_core</code></td><td>Pydantic, stdlib; SDK chỉ trong adapters.</td><td>FastAPI, Celery, SQLAlchemy, MinIO app, backend, UCP/MT mandatory.</td></tr>
+          <tr data-search="backend documents"><td><code>backend.documents</code></td><td>DB/storage primitives.</td><td>Contract/knowledge role semantics trong StoredObject.</td></tr>
+          <tr data-search="backend contracts"><td><code>backend.contracts</code></td><td>documents + core ingestion.</td><td>KB membership, fixed MT700 parsers.</td></tr>
+          <tr data-search="backend knowledge"><td><code>backend.knowledge</code></td><td>documents + core indexing/retrieval.</td><td>Contract verdict, fixed UCP source.</td></tr>
+          <tr data-search="jobs worker"><td><code>jobs / worker</code></td><td>Domain services qua composition.</td><td>Tin broker payload; che provider error thành domain outcome.</td></tr>
+          <tr data-search="api"><td><code>api</code></td><td>Services, schemas, trusted dependencies.</td><td>Parsing/indexing business logic trong route.</td></tr>
+        </tbody>
+      </table></div>
+    </section>
+
+    <section id="review-template">
+      <h2>Mẫu ghi review sau mỗi batch/phase</h2>
+      <div class="grid two">
+        <div class="card">
+          <h3>Batch review</h3>
+          <pre>BATCH:
+BUSINESS PURPOSE:
+FILES / RESPONSIBILITIES:
+INPUT → LOGIC → OUTPUT:
+FAILURES / INVARIANTS:
+DEPENDENCY DIRECTION:
+TEST COMMANDS + OUTPUT:
+KNOWN LIMITATIONS:
+COMMIT:</pre>
+        </div>
+        <div class="card">
+          <h3>Phase review</h3>
+          <pre>PHASE:
+BASELINE COMMIT:
+END-TO-END FLOW:
+PUBLIC INTERFACES:
+DATA / TRUST BOUNDARIES:
+DEPENDENCY AUDIT:
+TEST EVIDENCE:
+NOT_RUN / BLOCKED:
+KNOWN LIMITATIONS:
+GATE: PASS | FAIL | BLOCKED
+NEXT:</pre>
+        </div>
+      </div>
+      <p class="muted">Checkbox trong tài liệu được lưu cục bộ bằng localStorage của trình duyệt. Nhấn <span class="kbd">Ctrl/Cmd + P</span> để in hoặc xuất PDF.</p>
+    </section>
+
+    <footer>
+      <p><strong>Phạm vi:</strong> tài liệu học/review P0–P2 dựa trên source hiện tại và master migration plan. Không phải chứng nhận runtime, legal correctness hoặc production readiness.</p>
+      <p><strong>Portable:</strong> CSS/JavaScript được nhúng; không dùng CDN, font hoặc asset ngoài.</p>
+    </footer>
+  </main>
+</div>
+
+<script>
+  (() => {
+    const search = document.getElementById('search');
+    const searchable = [...document.querySelectorAll('[data-search]')];
+    const normalize = value => value.toLocaleLowerCase('vi').normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '');
+
+    search.addEventListener('input', () => {
+      const query = normalize(search.value.trim());
+      searchable.forEach(element => {
+        const haystack = normalize(`${element.dataset.search || ''} ${element.textContent}`);
+        element.classList.toggle('hidden', query && !haystack.includes(query));
+      });
+    });
+
+    document.querySelectorAll('.checklist input[type="checkbox"]').forEach(box => {
+      const key = `review-p0-p2:${box.id}`;
+      box.checked = localStorage.getItem(key) === '1';
+      box.addEventListener('change', () => {
+        localStorage.setItem(key, box.checked ? '1' : '0');
+      });
+    });
+  })();
+</script>
+</body>
+</html>

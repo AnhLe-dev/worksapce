@@ -1,0 +1,495 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Prototype UI/UX cho hệ thống rà soát hợp đồng có căn cứ và provenance.">
+  <title>Compliance Agent · UI/UX Demo</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #111b4a;
+      --muted: #64708f;
+      --line: #dfe6f5;
+      --soft: #f6f8ff;
+      --blue: #2457e6;
+      --blue-2: #123bb7;
+      --blue-soft: #edf2ff;
+      --green: #159447;
+      --green-soft: #e7f8ec;
+      --amber: #b86809;
+      --amber-soft: #fff4d8;
+      --red: #db3345;
+      --red-soft: #ffeaed;
+      --shadow: 0 14px 40px rgba(40, 66, 142, .10), 0 2px 8px rgba(40, 66, 142, .06);
+      --radius: 16px;
+    }
+
+    * { box-sizing: border-box; }
+    html { min-width: 320px; background: #eef3ff; }
+    body {
+      margin: 0;
+      color: var(--ink);
+      font: 14px/1.45 Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background:
+        radial-gradient(circle at 52% -20%, rgba(66, 107, 238, .14), transparent 36%),
+        linear-gradient(135deg, #fbfcff 0%, #f2f6ff 54%, #eef3ff 100%);
+    }
+    button, input, select { font: inherit; }
+    button { color: inherit; }
+    .app { min-height: 100vh; }
+    .topline {
+      height: 42px;
+      display: flex;
+      align-items: center;
+      padding: 0 24px;
+      background: linear-gradient(90deg, #eef3ff, #dfe9ff 48%, #eef3ff);
+      border-bottom: 1px solid rgba(80, 106, 184, .08);
+      font-size: 16px;
+      letter-spacing: -.01em;
+    }
+    .topline strong { font-size: 19px; margin-left: 10px; }
+    .topline em { margin-left: 7px; font-size: 17px; }
+    .doc-mark {
+      display: inline-grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 9px;
+      color: white;
+      background: linear-gradient(145deg, #5c82ff, #2457e6);
+      box-shadow: 0 7px 18px rgba(36, 87, 230, .24);
+    }
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      height: 72px;
+      display: grid;
+      grid-template-columns: 280px minmax(280px, 650px) 1fr;
+      align-items: center;
+      gap: 22px;
+      padding: 0 24px;
+      border-bottom: 1px solid var(--line);
+      background: rgba(255, 255, 255, .84);
+      backdrop-filter: blur(18px);
+    }
+    .brand { display: flex; align-items: center; gap: 11px; font-size: 22px; font-weight: 800; letter-spacing: -.04em; }
+    .brand-icon { font-size: 29px; filter: saturate(1.25); }
+    .global-search { position: relative; }
+    .global-search input {
+      width: 100%;
+      height: 42px;
+      padding: 0 90px 0 42px;
+      color: var(--ink);
+      border: 1px solid #cdd7ed;
+      border-radius: 11px;
+      background: white;
+      outline: none;
+      box-shadow: 0 4px 14px rgba(31, 62, 144, .05);
+    }
+    .global-search input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(36, 87, 230, .11); }
+    .global-search::before { content: "⌕"; position: absolute; left: 14px; top: 7px; font-size: 23px; color: var(--blue); }
+    .shortcut { position: absolute; right: 9px; top: 8px; padding: 4px 10px; border-radius: 7px; background: var(--blue-soft); color: #4c587a; font-size: 12px; }
+    .profile { justify-self: end; display: flex; align-items: center; gap: 12px; }
+    .bell { font-size: 21px; margin-right: 5px; }
+    .avatar { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 50%; background: #cdd8ff; color: #183caa; font-weight: 800; }
+    .profile-copy { line-height: 1.2; }
+    .profile-copy small { color: var(--muted); }
+
+    .shell { display: grid; grid-template-columns: 280px minmax(0, 1fr); min-height: calc(100vh - 114px); }
+    .sidebar {
+      position: sticky;
+      top: 72px;
+      height: calc(100vh - 72px);
+      overflow: auto;
+      padding: 18px 14px;
+      background: rgba(255,255,255,.74);
+      border-right: 1px solid var(--line);
+    }
+    .nav { display: grid; gap: 5px; }
+    .nav button {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      width: 100%;
+      min-height: 43px;
+      padding: 9px 12px;
+      border: 0;
+      border-radius: 10px;
+      background: transparent;
+      text-align: left;
+      font-weight: 650;
+      cursor: pointer;
+    }
+    .nav button:hover { background: #f0f4ff; }
+    .nav button.active { color: #163dac; background: linear-gradient(90deg, #e5ebff, #edf2ff); }
+    .nav .ico { width: 22px; font-size: 18px; text-align: center; }
+    .side-section { margin-top: 20px; padding-top: 17px; border-top: 1px solid var(--line); }
+    .side-title { display: flex; align-items: center; justify-content: space-between; margin: 0 5px 9px; font-weight: 800; }
+    .tiny-button { border: 0; border-radius: 8px; padding: 7px 9px; color: white; background: var(--blue-2); cursor: pointer; }
+    .mini-list { display: grid; gap: 5px; }
+    .mini-item {
+      display: grid;
+      grid-template-columns: 24px minmax(0,1fr) auto;
+      gap: 7px;
+      align-items: center;
+      min-height: 48px;
+      padding: 6px 7px;
+      border-radius: 9px;
+      background: rgba(255,255,255,.58);
+    }
+    .mini-file { color: var(--blue); font-size: 18px; }
+    .mini-item strong { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; }
+    .mini-item small { color: var(--muted); font-size: 11px; }
+    .status-mini { padding: 3px 7px; border-radius: 999px; font-size: 10px; font-weight: 800; white-space: nowrap; }
+    .knowledge-check { display: flex; gap: 9px; align-items: flex-start; padding: 7px; }
+    .checkbox { display: grid; place-items: center; flex: 0 0 18px; height: 18px; border-radius: 5px; color: white; background: var(--blue); font-size: 11px; }
+
+    main { min-width: 0; padding: 20px; }
+    .view { display: none; animation: enter .24s ease both; }
+    .view.active { display: block; }
+    @keyframes enter { from { opacity: 0; transform: translateY(5px); } }
+    .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 18px; margin-bottom: 18px; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 4px; font-size: 25px; line-height: 1.15; letter-spacing: -.035em; }
+    h2 { margin-bottom: 10px; font-size: 19px; letter-spacing: -.025em; }
+    h3 { margin-bottom: 7px; font-size: 15px; }
+    .muted { color: var(--muted); }
+    .demo-note { display: flex; gap: 8px; align-items: center; padding: 7px 11px; border-radius: 9px; background: #fff8dc; color: #7a5600; font-size: 12px; font-weight: 700; }
+    .button { display: inline-flex; gap: 8px; align-items: center; justify-content: center; min-height: 39px; padding: 8px 15px; border: 1px solid #cbd7ef; border-radius: 9px; background: white; font-weight: 700; cursor: pointer; }
+    .button:hover { border-color: var(--blue); color: var(--blue); }
+    .button.primary { color: white; border-color: var(--blue); background: linear-gradient(135deg, #2e63ed, #123cae); box-shadow: 0 8px 18px rgba(36,87,230,.18); }
+    .card { border: 1px solid var(--line); border-radius: var(--radius); background: rgba(255,255,255,.88); box-shadow: var(--shadow); }
+    .card.pad { padding: 18px; }
+    .badge { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 800; white-space: nowrap; }
+    .success { color: #08752f; background: var(--green-soft); }
+    .warning { color: #9b5908; background: var(--amber-soft); }
+    .danger { color: #c82739; background: var(--red-soft); }
+    .info { color: #174fd0; background: var(--blue-soft); }
+
+    /* Home */
+    .home-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(300px, .8fr); gap: 16px; }
+    .hero {
+      position: relative;
+      min-height: 132px;
+      overflow: hidden;
+      padding: 24px;
+      background: linear-gradient(120deg, #fff 0%, #edf3ff 55%, #dce8ff 100%);
+    }
+    .hero::after { content: "✓"; position: absolute; right: 7%; top: 8px; width: 104px; height: 104px; display: grid; place-items: center; border-radius: 30px; transform: rotate(-7deg); color: white; background: linear-gradient(145deg,#8ca9ff,#265ce7); font-size: 54px; box-shadow: 0 18px 28px rgba(36,87,230,.25); }
+    .hero h1 { margin-top: 10px; font-size: 29px; }
+    .metric-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 14px 0; }
+    .metric { padding: 16px 14px; min-height: 137px; }
+    .metric-icon { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; background: var(--blue-soft); font-size: 17px; }
+    .metric strong { display: block; margin: 9px 0 4px; font-size: 28px; letter-spacing: -.03em; }
+    .metric small { color: var(--muted); }
+    .home-lower { display: grid; grid-template-columns: 1.1fr .9fr; gap: 14px; }
+    .coverage { display: grid; grid-template-columns: 100px 1fr; align-items: center; gap: 20px; }
+    .coverage-number { color: var(--green); font-size: 42px; font-weight: 850; }
+    .progress { height: 13px; overflow: hidden; border-radius: 999px; background: #e4e9f3; }
+    .progress > span { display: block; height: 100%; border-radius: inherit; background: linear-gradient(90deg,#18a94f,#0a913a); }
+    .activity { list-style: none; margin: 0; padding: 0; }
+    .activity li { display: grid; grid-template-columns: 31px minmax(0,1fr) auto; gap: 9px; padding: 10px 0; border-top: 1px solid #edf0f7; }
+    .activity li:first-child { border-top: 0; }
+    .activity-icon { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: var(--green-soft); }
+    .task-list { overflow: hidden; }
+    .task-row { display: grid; grid-template-columns: 28px minmax(0,1fr) auto 16px; gap: 10px; align-items: start; padding: 16px; border-top: 1px solid var(--line); }
+    .task-row:first-of-type { border-top: 0; }
+    .task-row strong { display: block; margin-bottom: 4px; }
+
+    /* Common filters/table */
+    .filters { display: grid; grid-template-columns: minmax(240px, 1.3fr) repeat(3, minmax(130px, .65fr)); gap: 10px; margin-bottom: 14px; }
+    .control { width: 100%; height: 40px; padding: 0 12px; border: 1px solid #cfd8ed; border-radius: 9px; color: var(--ink); background: white; outline: none; }
+    .table-wrap { overflow: auto; border: 1px solid var(--line); border-radius: 13px; background: white; }
+    table { width: 100%; min-width: 850px; border-collapse: collapse; }
+    th, td { padding: 12px 11px; border-bottom: 1px solid #edf0f7; text-align: left; vertical-align: middle; }
+    th { color: #485572; background: #f7f9fd; font-size: 11px; text-transform: uppercase; letter-spacing: .03em; }
+    tr:hover td { background: #f8faff; }
+    tr.selected td { background: #edf3ff; }
+    .filename { display: flex; align-items: center; gap: 9px; min-width: 210px; }
+    .file-icon { display: grid; place-items: center; flex: 0 0 30px; height: 30px; border-radius: 8px; color: white; background: var(--blue); font-weight: 850; font-size: 11px; }
+    .file-icon.pdf { background: #e44352; }
+    .pagination { display: flex; justify-content: space-between; align-items: center; padding: 14px 2px 0; color: var(--muted); }
+
+    /* Contracts */
+    .contracts-layout { display: grid; grid-template-columns: minmax(0, 1.7fr) minmax(330px, .9fr); gap: 14px; }
+    .summary-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 14px; }
+    .summary-chip { padding: 12px; border: 1px solid var(--line); border-radius: 12px; background: white; }
+    .summary-chip strong { display: block; font-size: 20px; }
+    .details { padding: 0; overflow: hidden; }
+    .tabs { display: flex; gap: 18px; padding: 0 16px; border-bottom: 1px solid var(--line); }
+    .tab { padding: 13px 2px 10px; border-bottom: 3px solid transparent; font-weight: 700; }
+    .tab.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .detail-body { padding: 16px; }
+    .detail-header { display: grid; grid-template-columns: 42px 1fr auto; gap: 10px; align-items: center; margin-bottom: 13px; }
+    .detail-section { margin-top: 11px; padding: 13px; border: 1px solid var(--line); border-radius: 11px; background: #fbfcff; }
+    .kv { display: grid; grid-template-columns: 125px 1fr; gap: 7px 10px; }
+    .kv span:nth-child(odd) { color: var(--muted); }
+
+    /* Review */
+    .review-head { display: grid; grid-template-columns: 46px minmax(0,1fr) auto; gap: 13px; align-items: center; margin-bottom: 14px; }
+    .review-layout { display: grid; grid-template-columns: minmax(420px, 1.05fr) minmax(380px, .95fr); gap: 14px; }
+    .risk-summary { display: grid; grid-template-columns: 1.2fr 1fr; gap: 20px; align-items: center; margin-bottom: 14px; }
+    .risk-label { display: inline-flex; gap: 8px; align-items: center; padding: 10px 15px; border-radius: 11px; color: #a24d0a; background: var(--amber-soft); font-size: 18px; font-weight: 850; }
+    .finding { display: grid; grid-template-columns: 110px 1fr 22px; gap: 12px; align-items: start; padding: 13px; border: 1px solid var(--line); border-radius: 11px; background: white; cursor: pointer; }
+    .finding + .finding { margin-top: 8px; }
+    .finding:hover { border-color: #9db3f4; box-shadow: 0 6px 15px rgba(36,87,230,.08); }
+    .finding strong { display: block; margin-bottom: 3px; }
+    .recommend { margin-top: 14px; padding: 17px; border-radius: 13px; background: linear-gradient(135deg,#f1f4ff,#e8edff); }
+    .document-panel { overflow: hidden; }
+    .doc-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 11px 14px; border-bottom: 1px solid var(--line); }
+    .paper { min-height: 485px; margin: 15px; padding: 38px 34px; border: 1px solid #d7ddea; background: white; box-shadow: 0 7px 20px rgba(28,47,93,.11); color: #20243a; }
+    .paper h2 { text-align: center; }
+    mark { padding: 1px 3px; background: #fff0a8; }
+    .citation { margin: 0 15px 15px; padding: 14px; border: 1px solid #cfdaf2; border-radius: 11px; background: #f7f9ff; }
+    .citation strong { color: var(--blue); }
+
+    /* Knowledge */
+    .knowledge-layout { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(330px, .82fr); gap: 14px; }
+    .segment { display: flex; margin-bottom: 14px; border-bottom: 1px solid var(--line); }
+    .segment button { padding: 11px 17px; border: 0; border-bottom: 3px solid transparent; background: transparent; font-weight: 800; }
+    .segment button.active { color: var(--blue); border-bottom-color: var(--blue); }
+    .library-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 12px; }
+    .library-card { position: relative; min-height: 176px; padding: 16px; border: 1px solid var(--line); border-radius: 13px; background: white; cursor: pointer; }
+    .library-card:hover, .library-card.selected { border-color: var(--blue); box-shadow: 0 7px 22px rgba(36,87,230,.10); }
+    .library-card .select-dot { position: absolute; right: 12px; top: 12px; display: grid; place-items: center; width: 20px; height: 20px; border: 1px solid #aebbd6; border-radius: 6px; color: transparent; }
+    .library-card.selected .select-dot { color: white; border-color: var(--blue); background: var(--blue); }
+    .library-title { display: grid; grid-template-columns: 38px minmax(0,1fr); gap: 10px; padding-right: 26px; }
+    .book { display: grid; place-items: center; width: 38px; height: 38px; border-radius: 10px; color: var(--blue); background: var(--blue-soft); font-size: 21px; }
+    .library-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 15px; padding-top: 12px; border-top: 1px solid var(--line); font-size: 12px; }
+    .knowledge-detail { padding: 17px; }
+    .source-table { width: 100%; min-width: 0; font-size: 12px; }
+    .use-box { margin-top: 14px; padding: 14px; border-radius: 11px; color: #1e397c; background: #edf3ff; }
+    .use-box p { margin-bottom: 7px; }
+
+    /* History */
+    .history-tabs { display: flex; gap: 26px; margin: 5px 0 12px; border-bottom: 1px solid var(--line); }
+    .history-tabs span { padding: 10px 4px; font-weight: 750; }
+    .history-tabs .active { color: var(--blue); border-bottom: 3px solid var(--blue); }
+    .history-lower { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(330px, .65fr); gap: 14px; margin-top: 14px; }
+    .outcome-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+    .outcome { padding: 12px; border-radius: 11px; background: #f7f9fd; }
+    .outcome strong { display: block; font-size: 21px; }
+
+    .toast { position: fixed; right: 22px; bottom: 22px; z-index: 50; max-width: 360px; padding: 12px 15px; border-radius: 11px; color: white; background: #15255f; box-shadow: var(--shadow); opacity: 0; transform: translateY(10px); pointer-events: none; transition: .2s ease; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+
+    @media (max-width: 1180px) {
+      .topbar { grid-template-columns: 235px 1fr auto; }
+      .shell { grid-template-columns: 230px minmax(0,1fr); }
+      .home-grid, .contracts-layout, .knowledge-layout { grid-template-columns: 1fr; }
+      .metric-grid { grid-template-columns: repeat(3,1fr); }
+      .review-layout, .history-lower { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 780px) {
+      .topline { display: none; }
+      .topbar { height: auto; min-height: 68px; grid-template-columns: 1fr auto; padding: 10px 14px; }
+      .global-search { grid-column: 1 / -1; grid-row: 2; }
+      .profile-copy, .bell { display: none; }
+      .shell { display: block; }
+      .sidebar { position: static; width: 100%; height: auto; padding: 8px; border-right: 0; border-bottom: 1px solid var(--line); }
+      .nav { grid-template-columns: repeat(5, minmax(56px,1fr)); }
+      .nav button { justify-content: center; padding: 8px 4px; font-size: 0; }
+      .nav .ico { font-size: 19px; }
+      .side-section { display: none; }
+      main { padding: 13px; }
+      .metric-grid, .summary-strip { grid-template-columns: repeat(2,1fr); }
+      .home-lower, .library-grid, .risk-summary { grid-template-columns: 1fr; }
+      .filters { grid-template-columns: 1fr 1fr; }
+      .page-head { flex-direction: column; }
+      .review-layout { display: block; }
+      .document-panel { margin-top: 13px; }
+    }
+    @media print {
+      .topline, .topbar, .sidebar, .demo-note, button, .filters { display: none !important; }
+      .shell { display: block; }
+      main { padding: 0; }
+      .view { display: none !important; }
+      .view.active { display: block !important; }
+      .card { box-shadow: none; break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div class="topline"><span class="doc-mark">▤</span><strong>CONTRACT REVIEWER</strong><em>– Rà soát hợp đồng, nhận phân tích AI có trích dẫn và kiểm chứng căn cứ</em></div>
+    <header class="topbar">
+      <div class="brand"><span class="brand-icon">📖</span> Legal Compliance AI</div>
+      <label class="global-search"><input id="globalSearch" type="search" placeholder="Tìm kiếm trong hợp đồng, điều khoản, tri thức…"><span class="shortcut">Ctrl + K</span></label>
+      <div class="profile"><span class="bell">♧</span><span class="avatar">R</span><span class="profile-copy"><strong>Reviewer</strong><br><small>Contract Reviewer</small></span></div>
+    </header>
+
+    <div class="shell">
+      <aside class="sidebar">
+        <nav class="nav" aria-label="Điều hướng chính">
+          <button class="active" data-page="home"><span class="ico">⌂</span>Trang chủ</button>
+          <button data-page="contracts"><span class="ico">▤</span>Hợp đồng của tôi</button>
+          <button data-page="review"><span class="ico">◇</span>Rà soát hợp đồng</button>
+          <button data-page="knowledge"><span class="ico">▥</span>Thư viện tri thức</button>
+          <button data-page="history"><span class="ico">◷</span>Lịch sử rà soát</button>
+        </nav>
+
+        <section class="side-section">
+          <div class="side-title">Hợp đồng cần rà soát (5)<button class="tiny-button" data-demo-action>＋ Thêm</button></div>
+          <div class="mini-list">
+            <div class="mini-item"><span class="mini-file">▧</span><span><strong>LC-001_Import_Goods.docx</strong><small>Cập nhật: 20/01/2025</small></span><span class="status-mini success">Đã rà soát</span></div>
+            <div class="mini-item"><span class="mini-file">▧</span><span><strong>LC-002_Service_Agreement.pdf</strong><small>Cập nhật: 18/01/2025</small></span><span class="status-mini warning">Chưa rà soát</span></div>
+            <div class="mini-item"><span class="mini-file">▧</span><span><strong>LC-003_Distribution.docx</strong><small>Cập nhật: 17/01/2025</small></span><span class="status-mini warning">Chưa rà soát</span></div>
+            <div class="mini-item"><span class="mini-file">▧</span><span><strong>LC-004_Payment_Term.pdf</strong><small>Cập nhật: 15/01/2025</small></span><span class="status-mini success">Đã rà soát</span></div>
+          </div>
+        </section>
+
+        <section class="side-section">
+          <div class="side-title">Thư viện tri thức khả dụng ⓘ</div>
+          <div class="knowledge-check"><span class="checkbox">✓</span><span><strong>Thanh toán quốc tế</strong><br><small class="muted">342 tài liệu · READY</small></span></div>
+          <div class="knowledge-check"><span class="checkbox">✓</span><span><strong>Quản lý ngoại hối</strong><br><small class="muted">128 tài liệu · READY</small></span></div>
+          <div class="knowledge-check"><span class="checkbox">✓</span><span><strong>Incoterms 2020</strong><br><small class="muted">56 tài liệu · READY</small></span></div>
+        </section>
+      </aside>
+
+      <main>
+        <!-- HOME -->
+        <section class="view active" id="home" aria-labelledby="home-title">
+          <div class="page-head"><div><h1 id="home-title">Tổng quan công việc</h1><p class="muted">Theo dõi hợp đồng, tiến độ rà soát và các vấn đề cần xử lý.</p></div><div class="demo-note">ⓘ Prototype tĩnh · Dữ liệu chỉ để minh hoạ UI/UX</div></div>
+          <div class="home-grid">
+            <div>
+              <div class="hero card"><h1>Chào mừng trở lại, Reviewer!</h1><p>Ưu tiên các hợp đồng có rủi ro cao và luôn kiểm chứng căn cứ trước khi kết luận.</p></div>
+              <div class="metric-grid">
+                <div class="metric card"><span class="metric-icon">▤</span><small>Tổng số hợp đồng</small><strong>342</strong><small style="color:var(--green)">↑ 12% so với 7 ngày trước</small></div>
+                <div class="metric card"><span class="metric-icon">◷</span><small>Đang rà soát</small><strong>18</strong><small style="color:var(--blue)">+6 hợp đồng</small></div>
+                <div class="metric card"><span class="metric-icon">✓</span><small>Đã hoàn thành</small><strong>298</strong><small style="color:var(--green)">↑ 9% tuần này</small></div>
+                <div class="metric card"><span class="metric-icon">△</span><small>Phát hiện rủi ro cao</small><strong>27</strong><small style="color:var(--green)">↓ 8% tuần này</small></div>
+                <div class="metric card"><span class="metric-icon">⚑</span><small>Cần xử lý</small><strong>16</strong><small>Đang chờ hành động</small></div>
+              </div>
+              <div class="home-lower">
+                <div class="card pad"><h2>Độ bao phủ rà soát <span title="Tỷ lệ đơn vị rà soát đã được đối chiếu">ⓘ</span></h2><div class="coverage"><div class="coverage-number">78%</div><div><div class="progress"><span style="width:78%"></span></div><p class="muted" style="margin:10px 0 0">298 đã rà soát · 85 chưa rà soát</p></div></div></div>
+                <div class="card pad"><h2>⚡ Truy cập nhanh</h2><button class="button primary" data-page-link="review" style="width:100%">＋ Bắt đầu rà soát mới</button><button class="button" data-demo-action style="width:100%;margin-top:8px">⇧ Tải lên và rà soát</button></div>
+              </div>
+              <div class="home-lower" style="margin-top:14px">
+                <div class="card pad"><div class="page-head" style="margin-bottom:3px"><h2>Hoạt động gần đây</h2><button class="button" data-page-link="history">Xem tất cả →</button></div><ul class="activity"><li><span class="activity-icon">✓</span><span><strong>Hoàn thành rà soát LC-001_Import_Goods.docx</strong><small class="muted">Phát hiện 3 rủi ro, 1 điểm cần làm rõ.</small></span><small>10:25</small></li><li><span class="activity-icon">↻</span><span><strong>Cập nhật kết quả LC-002_Service_Agreement.pdf</strong><small class="muted">Điều chỉnh đánh giá rủi ro và bổ sung căn cứ.</small></span><small>09:48</small></li><li><span class="activity-icon">△</span><span><strong>Phát hiện rủi ro cao trong LC-003_Distribution.docx</strong><small class="muted">Điều khoản thanh toán chưa phù hợp.</small></span><small>Hôm qua</small></li></ul></div>
+                <div class="card pad"><div class="page-head" style="margin-bottom:3px"><h2>Thư viện khả dụng</h2><button class="button" data-page-link="knowledge">Xem tất cả →</button></div><ul class="activity"><li><span class="book">▥</span><span><strong>Thanh toán quốc tế</strong><small class="muted">342 tài liệu</small></span><span class="badge success">READY</span></li><li><span class="book">▥</span><span><strong>Quản lý ngoại hối</strong><small class="muted">128 tài liệu</small></span><span class="badge success">READY</span></li><li><span class="book">▥</span><span><strong>Incoterms 2020</strong><small class="muted">56 tài liệu</small></span><span class="badge success">READY</span></li></ul></div>
+              </div>
+            </div>
+            <aside class="card task-list"><div class="page-head" style="padding:18px 16px 0;margin:0"><h2>Công việc cần xử lý (16)</h2><button class="button" data-page-link="contracts">Xem tất cả →</button></div><div class="task-row"><span class="mini-file">▧</span><span><strong>LC-003_Distribution.docx</strong><span class="muted">Điều khoản thanh toán chưa phù hợp chính sách.</span></span><span class="badge danger">Rủi ro cao</span><b>›</b></div><div class="task-row"><span class="mini-file">▧</span><span><strong>LC-007_Agency_Agreement.docx</strong><span class="muted">Quyền và nghĩa vụ các bên chưa rõ.</span></span><span class="badge warning">Trung bình</span><b>›</b></div><div class="task-row"><span class="mini-file">▧</span><span><strong>LC-008_Service_Contract.pdf</strong><span class="muted">Điều khoản chấm dứt cần bổ sung điều kiện.</span></span><span class="badge warning">Trung bình</span><b>›</b></div><div class="task-row"><span class="mini-file">▧</span><span><strong>LC-009_Supply_Agreement.docx</strong><span class="muted">Cần làm rõ tiêu chuẩn chất lượng.</span></span><span class="badge info">Cần làm rõ</span><b>›</b></div></aside>
+          </div>
+        </section>
+
+        <!-- CONTRACTS -->
+        <section class="view" id="contracts" aria-labelledby="contracts-title">
+          <div class="page-head"><div><h1 id="contracts-title">Hợp đồng của tôi</h1><p class="muted">Quản lý, theo dõi và yêu cầu rà soát các hợp đồng đã tải lên.</p></div><button class="button primary" data-demo-action>⇧ Tải lên hợp đồng</button></div>
+          <div class="contracts-layout">
+            <div class="card pad">
+              <div class="filters"><input class="control" id="contractFilter" placeholder="⌕  Tìm trong danh sách hợp đồng…"><select class="control"><option>Trạng thái: Tất cả</option><option>Đã hoàn thành</option><option>Đang rà soát</option></select><input class="control" value="Từ ngày — Đến ngày" aria-label="Khoảng ngày"><button class="button">▽ Bộ lọc khác</button></div>
+              <div class="summary-strip"><div class="summary-chip">Tổng số<strong>18</strong></div><div class="summary-chip">Chờ rà soát<strong style="color:var(--amber)">5</strong></div><div class="summary-chip">Đang rà soát<strong style="color:var(--blue)">3</strong></div><div class="summary-chip">Hoàn thành<strong style="color:var(--green)">8</strong></div><div class="summary-chip">Cần xử lý<strong style="color:var(--red)">2</strong></div></div>
+              <div class="table-wrap"><table id="contractTable"><thead><tr><th>Hợp đồng</th><th>Loại</th><th>Chủ sở hữu</th><th>Cập nhật</th><th>Trạng thái</th><th>Thao tác</th></tr></thead><tbody>
+                <tr class="selected"><td><span class="filename"><span class="file-icon">W</span><span><strong>LC-001_Import_Goods.docx</strong><small class="muted">Hợp đồng mua bán hàng hóa</small></span></span></td><td>DOCX</td><td>Nguyễn Thị An</td><td>20/01/2025 10:24</td><td><span class="badge success">✓ Đã hoàn thành</span></td><td><button class="button" data-page-link="review">Mở</button></td></tr>
+                <tr><td><span class="filename"><span class="file-icon pdf">PDF</span><span><strong>LC-002_Service_Agreement.pdf</strong><small class="muted">Hợp đồng cung cấp dịch vụ</small></span></span></td><td>PDF</td><td>Phạm Minh Đức</td><td>19/01/2025 16:30</td><td><span class="badge info">◌ Đang rà soát</span></td><td><button class="button" data-demo-action>Mở</button></td></tr>
+                <tr><td><span class="filename"><span class="file-icon">W</span><span><strong>LC-003_Distribution.docx</strong><small class="muted">Hợp đồng phân phối</small></span></span></td><td>DOCX</td><td>Lê Thu Hằng</td><td>17/01/2025 14:16</td><td><span class="badge warning">◌ Chờ rà soát</span></td><td><button class="button" data-demo-action>Mở</button></td></tr>
+                <tr><td><span class="filename"><span class="file-icon pdf">PDF</span><span><strong>LC-004_Payment_Term.pdf</strong><small class="muted">Phụ lục điều khoản thanh toán</small></span></span></td><td>PDF</td><td>Nguyễn Thị An</td><td>15/01/2025 11:02</td><td><span class="badge warning">◌ Chờ rà soát</span></td><td><button class="button" data-demo-action>Mở</button></td></tr>
+                <tr><td><span class="filename"><span class="file-icon">W</span><span><strong>LC-005_NDA.docx</strong><small class="muted">Thỏa thuận bảo mật thông tin</small></span></span></td><td>DOCX</td><td>Phạm Minh Đức</td><td>10/01/2025 09:48</td><td><span class="badge success">✓ Đã hoàn thành</span></td><td><button class="button" data-demo-action>Mở</button></td></tr>
+              </tbody></table></div>
+              <div class="pagination"><span>Hiển thị 1–5 trên 18 hợp đồng</span><span><button class="button">‹</button> <button class="button primary">1</button> <button class="button">2</button> <button class="button">›</button></span></div>
+            </div>
+            <aside class="card details"><div class="tabs"><span class="tab active">Thông tin hợp đồng</span><span class="tab">Lịch sử rà soát</span><span class="tab">Ghi chú (2)</span></div><div class="detail-body"><div class="detail-header"><span class="file-icon">W</span><span><strong>LC-001_Import_Goods.docx</strong><br><small class="muted">Hợp đồng mua bán hàng hóa</small></span><span class="badge success">✓ Đã hoàn thành</span></div><div style="display:flex;gap:7px"><button class="button primary" data-page-link="review">⌕ Yêu cầu rà soát</button><button class="button" data-demo-action>Tải xuống</button></div><div class="detail-section"><h3>Thông tin chung</h3><div class="kv"><span>Mã hợp đồng</span><strong>LC-001/2025</strong><span>Phiên bản</span><strong>v1.0</strong><span>Chủ sở hữu</span><strong>Nguyễn Thị An</strong><span>Ngày tải lên</span><strong>20/01/2025 10:24</strong><span>Kích thước</span><strong>1,2 MB · DOCX</strong></div></div><div class="detail-section"><h3>Các bên liên quan</h3><div class="kv"><span>Bên bán</span><strong>Công ty TNHH Thương mại ABC</strong><span>Bên mua</span><strong>Công ty Cổ phần XYZ</strong></div></div><div class="detail-section"><h3>Tóm tắt nội dung</h3><p style="margin:0">Hợp đồng mua bán hàng hóa, quy định thanh toán, giao hàng, chứng từ và trách nhiệm của các bên.</p></div><div class="detail-section"><h3>Trạng thái mới nhất</h3><p><span class="badge success">✓ Đã hoàn thành</span></p><p style="margin:0">Kết quả: có 3 phát hiện cần xem xét và 1 khuyến nghị cải thiện.</p></div></div></aside>
+          </div>
+        </section>
+
+        <!-- REVIEW -->
+        <section class="view" id="review" aria-labelledby="review-title">
+          <div class="review-head"><span class="file-icon">W</span><div><h1 id="review-title">LC-001_Import_Goods.docx</h1><span class="muted">Hợp đồng mua bán hàng hóa · Cập nhật 20/01/2025, 10:24</span></div><div><span class="badge success">✓ Hoàn thành</span> <button class="button" data-demo-action>⇩ Tải báo cáo</button></div></div>
+          <div class="review-layout">
+            <div>
+              <div class="card pad risk-summary"><div><h2>Kết quả rà soát</h2><span class="risk-label">△ Rủi ro trung bình</span><p class="muted" style="margin:10px 0 0">Có 3 vấn đề cần lưu ý, chủ yếu liên quan điều kiện chứng từ và thời hạn.</p></div><div><strong>Độ bao phủ điều khoản</strong><div class="coverage-number" style="font-size:34px">78%</div><div class="progress"><span style="width:78%"></span></div><small class="muted">Đã kiểm tra: 14 / 18 điều khoản</small></div></div>
+              <h2>Các phát hiện chính (3)</h2>
+              <article class="finding"><span class="badge danger">△ Rủi ro cao</span><span><strong>F-01 · Điều kiện chứng từ chưa phù hợp</strong><span class="muted">Yêu cầu “bản sao vận đơn” có thể chưa nhất quán với căn cứ được chọn.</span></span><b>›</b></article>
+              <article class="finding"><span class="badge warning">△ Trung bình</span><span><strong>F-02 · Thời hạn xuất trình chứng từ</strong><span class="muted">Thời hạn 25 ngày kể từ ngày giao hàng có thể tạo rủi ro thực hiện.</span></span><b>›</b></article>
+              <article class="finding"><span class="badge warning">△ Trung bình</span><span><strong>F-03 · Quy định về phí ngân hàng</strong><span class="muted">Chưa xác định rõ bên chịu phí thông báo và phí xác nhận.</span></span><b>›</b></article>
+              <div class="recommend"><h2>✦ Khuyến nghị</h2><ul><li>Đối chiếu lại điều khoản chứng từ với nguồn đã chọn.</li><li>Rà soát và thống nhất thời hạn xuất trình chứng từ.</li><li>Làm rõ bên chịu các loại phí liên quan.</li></ul></div>
+            </div>
+            <aside class="card document-panel"><div class="doc-toolbar"><strong>Hợp đồng (PDF)</strong><span><button class="button">‹</button> <b>5 / 18</b> <button class="button">›</button> <button class="button">100%</button></span></div><div class="paper"><h2>HỢP ĐỒNG MUA BÁN HÀNG HÓA</h2><p style="text-align:center">(Số: LC-001/2025)</p><p>…</p><h3>Điều 7. Thanh toán</h3><p><mark>7.1 Bên Mua thanh toán bằng thư tín dụng không hủy ngang (L/C). Bộ chứng từ gồm bản gốc vận đơn, hóa đơn thương mại, phiếu đóng gói và chứng nhận xuất xứ.</mark></p><p>…</p></div><div class="citation"><h3>Căn cứ liên quan</h3><strong>KB-PAYMENT · Điều 14 (a)</strong><p style="margin:6px 0 0">Đoạn căn cứ được truy xuất từ đúng snapshot đã chọn. Người rà soát cần kiểm chứng trước khi chấp nhận kết luận.</p></div></aside>
+          </div>
+        </section>
+
+        <!-- KNOWLEDGE -->
+        <section class="view" id="knowledge" aria-labelledby="knowledge-title">
+          <div class="page-head"><div><h1 id="knowledge-title">Thư viện tri thức</h1><p class="muted">Duyệt và chọn các nguồn tri thức được cấp quyền để hỗ trợ rà soát hợp đồng.</p></div><div class="demo-note">Mỗi thư viện là một Knowledge Base độc lập</div></div>
+          <div class="knowledge-layout">
+            <div class="card pad"><div class="segment"><button class="active">▥ Thư viện khả dụng (6)</button><button>✓ Thư viện đã chọn (3)</button></div><div class="filters"><input class="control" placeholder="⌕  Tìm theo tên thư viện, nguồn, lĩnh vực…"><select class="control"><option>Lĩnh vực áp dụng</option></select><select class="control"><option>Nguồn</option></select><select class="control"><option>Trạng thái</option></select></div><div class="library-grid">
+              <article class="library-card selected" tabindex="0"><span class="select-dot">✓</span><div class="library-title"><span class="book">▥</span><h3>Thanh toán quốc tế và tín dụng chứng từ</h3></div><span class="badge success">READY</span><div class="library-meta"><span>▱ Số nguồn: 1</span><span>▤ Tài liệu: 342</span><span>⌁ Thanh toán quốc tế</span><span>◷ Hiệu lực hiện hành</span></div></article>
+              <article class="library-card selected" tabindex="0"><span class="select-dot">✓</span><div class="library-title"><span class="book">▥</span><h3>Thực hành kiểm tra chứng từ</h3></div><span class="badge success">READY</span><div class="library-meta"><span>▱ Số nguồn: 1</span><span>▤ Tài liệu: 128</span><span>⌁ Kiểm tra chứng từ</span><span>◷ Hiệu lực hiện hành</span></div></article>
+              <article class="library-card selected" tabindex="0"><span class="select-dot">✓</span><div class="library-title"><span class="book">▥</span><h3>Incoterms 2020 – Điều kiện giao hàng</h3></div><span class="badge success">READY</span><div class="library-meta"><span>▱ Số nguồn: 1</span><span>▤ Tài liệu: 56</span><span>⌁ Giao nhận hàng hóa</span><span>◷ 2020 – nay</span></div></article>
+              <article class="library-card" tabindex="0"><span class="select-dot">✓</span><div class="library-title"><span class="book">▥</span><h3>Quy định nội bộ về L/C</h3></div><span class="badge success">READY</span><div class="library-meta"><span>▱ Số nguồn: 3</span><span>▤ Tài liệu: 87</span><span>⌁ Quy trình nội bộ</span><span>◷ 2023 – nay</span></div></article>
+              <article class="library-card" tabindex="0"><span class="select-dot">✓</span><div class="library-title"><span class="book">▥</span><h3>Luật thương mại và văn bản hướng dẫn</h3></div><span class="badge success">READY</span><div class="library-meta"><span>▱ Số nguồn: 4</span><span>▤ Tài liệu: 780</span><span>⌁ Giao dịch thương mại</span><span>◷ Hiệu lực hiện hành</span></div></article>
+              <article class="library-card" tabindex="0"><span class="select-dot">✓</span><div class="library-title"><span class="book">▥</span><h3>Quy định ngoại hối và thanh toán quốc tế</h3></div><span class="badge success">READY</span><div class="library-meta"><span>▱ Số nguồn: 2</span><span>▤ Tài liệu: 215</span><span>⌁ Quản lý ngoại hối</span><span>◷ 2016 – nay</span></div></article>
+            </div></div>
+            <aside class="card knowledge-detail"><h2>Chi tiết thư viện tri thức</h2><div class="library-title"><span class="book">▥</span><div><h2 style="margin-bottom:4px">Thanh toán quốc tế và tín dụng chứng từ</h2><span class="badge success">READY</span></div></div><div class="detail-section"><div class="kv"><span>Số nguồn</span><strong>1</strong><span>Số tài liệu</span><strong>342</strong><span>Lĩnh vực</span><strong>Thanh toán quốc tế</strong><span>Hiệu lực</span><strong>Hiện hành</strong></div><p class="muted" style="margin:13px 0 0">Tập hợp nguồn phục vụ đánh giá điều khoản thanh toán và chứng từ trong giao dịch thương mại.</p></div><h3 style="margin-top:17px">Các nguồn và tài liệu bao gồm</h3><table class="source-table"><thead><tr><th>Nguồn</th><th>Mô tả</th><th>Số tài liệu</th></tr></thead><tbody><tr><td><strong>Payment Rules</strong></td><td>Quy tắc thanh toán và chứng từ</td><td>342</td></tr><tr><td><strong>Internal Guide</strong></td><td>Hướng dẫn kiểm tra nội bộ</td><td>48</td></tr></tbody></table><div class="use-box"><h3>ⓘ Thư viện được sử dụng thế nào?</h3><p>✓ Chỉ truy xuất trong snapshot và access scope được chọn.</p><p>✓ Evidence giữ source ID, version, checksum và vị trí trích dẫn.</p><p>✓ Kết quả AI là hỗ trợ; người rà soát chịu trách nhiệm quyết định.</p></div></aside>
+          </div>
+        </section>
+
+        <!-- HISTORY -->
+        <section class="view" id="history" aria-labelledby="history-title">
+          <div class="page-head"><div><h1 id="history-title">◷ Lịch sử rà soát</h1><p class="muted">Theo dõi toàn bộ lần rà soát, tiến độ và mở lại báo cáo khi cần.</p></div><div class="demo-note">Kết quả kỹ thuật ≠ kết luận pháp lý</div></div>
+          <div class="filters"><select class="control"><option>Tất cả hợp đồng</option></select><input class="control" value="01/01/2025 – 31/01/2025"><select class="control"><option>Tất cả trạng thái</option></select><select class="control"><option>Tất cả mức độ</option></select></div>
+          <div class="card pad"><div class="history-tabs"><span class="active">▤ Tất cả (18)</span><span>✓ Đã hoàn thành (14)</span><span>◌ Đang rà soát (4)</span></div><div class="table-wrap"><table><thead><tr><th>Mã rà soát</th><th>Hợp đồng</th><th>Kho tri thức sử dụng</th><th>Trạng thái</th><th>Độ bao phủ</th><th>Rủi ro cao</th><th>Cập nhật</th></tr></thead><tbody><tr class="selected"><td><strong>RV-2025-018</strong></td><td>LC-001_Import_Goods.docx</td><td><span class="badge info">▥ Thanh toán quốc tế</span></td><td><span class="badge success">✓ Hoàn thành</span></td><td><span class="badge success">78%</span></td><td><span class="badge danger">3</span></td><td>20/01/2025 10:25</td></tr><tr><td><strong>RV-2025-017</strong></td><td>LC-002_Service_Agreement.pdf</td><td><span class="badge info">▥ Tổng quan</span></td><td><span class="badge success">✓ Hoàn thành</span></td><td><span class="badge success">92%</span></td><td>1</td><td>18/01/2025 16:40</td></tr><tr><td><strong>RV-2025-016</strong></td><td>LC-003_Distribution.docx</td><td><span class="badge info">▥ Thông lệ quốc tế</span></td><td><span class="badge info">◌ Đang rà soát</span></td><td>—</td><td>—</td><td>17/01/2025 14:12</td></tr><tr><td><strong>RV-2025-015</strong></td><td>LC-004_Payment_Term.pdf</td><td><span class="badge info">▥ Payment Rules</span></td><td><span class="badge success">✓ Hoàn thành</span></td><td><span class="badge success">85%</span></td><td>2</td><td>15/01/2025 11:08</td></tr></tbody></table></div></div>
+          <div class="history-lower"><div class="card pad"><div class="page-head"><div><h2>Báo cáo rà soát: RV-2025-018</h2><span class="muted">LC-001_Import_Goods.docx · Cập nhật 20/01/2025 10:25</span></div><button class="button primary" data-page-link="review">Mở lại báo cáo</button></div><h3>Tóm tắt kết quả</h3><div class="outcome-grid"><div class="outcome danger"><strong>3</strong>Rủi ro cao</div><div class="outcome warning"><strong>1</strong>Trung bình</div><div class="outcome warning"><strong>2</strong>Rủi ro thấp</div><div class="outcome success"><strong>7</strong>Phù hợp</div><div class="outcome info"><strong>78%</strong>Độ bao phủ</div></div><h3 style="margin-top:17px">Các phát hiện chính</h3><article class="finding"><span class="badge danger">Rủi ro cao</span><span><strong>F-01 · Điều kiện chứng từ chưa phù hợp</strong><span class="muted">Cần kiểm chứng lại với đúng snapshot nguồn.</span></span><b>›</b></article><article class="finding"><span class="badge warning">Trung bình</span><span><strong>F-02 · Thời hạn xuất trình chứng từ</strong><span class="muted">Thời hạn có thể tạo rủi ro hiệu lực thanh toán.</span></span><b>›</b></article></div><aside class="card document-panel"><div class="doc-toolbar"><strong>5 / 18</strong><span><button class="button">−</button> 100% <button class="button">＋</button></span></div><div class="paper" style="min-height:360px"><h2>HỢP ĐỒNG MUA BÁN HÀNG HÓA</h2><p>…</p><h3>Điều 7. Thanh toán</h3><p><mark>Bên Mua thanh toán bằng thư tín dụng không hủy ngang và xuất trình bộ chứng từ theo thỏa thuận.</mark></p></div></aside></div>
+        </section>
+      </main>
+    </div>
+  </div>
+  <div class="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const pageButtons = document.querySelectorAll('[data-page]');
+    const views = document.querySelectorAll('.view');
+    const toast = document.querySelector('.toast');
+
+    function showPage(id) {
+      views.forEach(view => view.classList.toggle('active', view.id === id));
+      pageButtons.forEach(button => button.classList.toggle('active', button.dataset.page === id));
+      history.replaceState(null, '', `#${id}`);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    pageButtons.forEach(button => button.addEventListener('click', () => showPage(button.dataset.page)));
+    document.querySelectorAll('[data-page-link]').forEach(button => button.addEventListener('click', () => showPage(button.dataset.pageLink)));
+
+    function notify(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(notify.timer);
+      notify.timer = setTimeout(() => toast.classList.remove('show'), 2600);
+    }
+
+    document.querySelectorAll('[data-demo-action]').forEach(button => button.addEventListener('click', () => notify('Đây là prototype UI/UX. Chức năng này sẽ được nối API ở Phase 4.')));
+    document.querySelectorAll('.library-card').forEach(card => card.addEventListener('click', () => {
+      card.classList.toggle('selected');
+      const selected = document.querySelectorAll('.library-card.selected').length;
+      notify(`Đã chọn ${selected} thư viện cho lần rà soát tiếp theo.`);
+    }));
+
+    const contractFilter = document.getElementById('contractFilter');
+    contractFilter?.addEventListener('input', event => {
+      const query = event.target.value.toLowerCase().trim();
+      document.querySelectorAll('#contractTable tbody tr').forEach(row => {
+        row.hidden = !row.textContent.toLowerCase().includes(query);
+      });
+    });
+
+    const globalSearch = document.getElementById('globalSearch');
+    document.addEventListener('keydown', event => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        globalSearch.focus();
+      }
+      if (event.key === 'Escape') globalSearch.blur();
+    });
+    globalSearch.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && globalSearch.value.trim()) notify(`Tìm kiếm demo: “${globalSearch.value.trim()}”`);
+    });
+
+    const initialPage = location.hash.slice(1);
+    if ([...views].some(view => view.id === initialPage)) showPage(initialPage);
+  </script>
+</body>
+</html>

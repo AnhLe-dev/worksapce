@@ -1,0 +1,316 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-rag}
+      POSTGRES_USER: ${POSTGRES_USER:-rag}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-rag_dev_only}
+    ports:
+      - "127.0.0.1:${POSTGRES_HOST_PORT:-15432}:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "127.0.0.1:${REDIS_HOST_PORT:-16379}:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  minio:
+    image: docker.io/pgsty/silo:RELEASE.2026-10-26T00-00-00Z
+    command: ["server", "/data", "--console-address", ":9001"]
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_SECRET_KEY:-minioadmin}
+    ports:
+      - "127.0.0.1:${MINIO_API_HOST_PORT:-19000}:9000"
+      - "127.0.0.1:${MINIO_CONSOLE_HOST_PORT:-19001}:9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "silo", "healthcheck", "ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  object-storage-init:
+    image: workspace-backend-runtime:local
+    pull_policy: never
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      COMPLIANCE_MINIO_BUCKET: ${COMPLIANCE_MINIO_BUCKET:-compliance-documents}
+      MINIO_SECURE: "false"
+      DEPENDENCY_TIMEOUT_SECONDS: ${DEPENDENCY_TIMEOUT_SECONDS:-10}
+    command:
+      - python
+      - scripts/init_object_storage.py
+
+  qdrant:
+    image: qdrant/qdrant:v1.20.0
+    ports:
+      - "127.0.0.1:${QDRANT_HOST_PORT:-16333}:6333"
+    volumes:
+      - qdrant-data:/qdrant/storage
+
+  backend:
+    image: workspace-backend-runtime:local
+    build:
+      context: .
+      dockerfile: compliance-agent/backend/Dockerfile
+      target: backend-runtime
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      object-storage-init:
+        condition: service_completed_successfully
+      qdrant:
+        condition: service_started
+    environment:
+      DATABASE_URL: >-
+        postgresql+psycopg://${POSTGRES_USER:-rag}:${POSTGRES_PASSWORD:-rag_dev_only}@postgres:5432/${POSTGRES_DB:-rag}
+      CELERY_BROKER_URL: redis://redis:6379/0
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      COMPLIANCE_MINIO_BUCKET: ${COMPLIANCE_MINIO_BUCKET:-compliance-documents}
+      MINIO_SECURE: "false"
+      QDRANT_CLOUD_URL: http://qdrant:6333
+      QDRANT_CLOUD_API_KEY: ${QDRANT_CLOUD_API_KEY:-}
+      COMPLIANCE_QDRANT_COLLECTION: ${COMPLIANCE_QDRANT_COLLECTION:-compliance_knowledge_v1}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      DEFAULT_EMBEDDING_MODEL: ${DEFAULT_EMBEDDING_MODEL:-text-embedding-3-small}
+      EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-1536}
+      MAX_CHUNK_CHARACTERS: ${MAX_CHUNK_CHARACTERS:-1200}
+      REVIEW_RETRIEVAL_LIMIT: ${REVIEW_RETRIEVAL_LIMIT:-5}
+      REVIEW_TIMEOUT_SECONDS: ${REVIEW_TIMEOUT_SECONDS:-60}
+      SYSTEM_ACCESS_SCOPE: ${SYSTEM_ACCESS_SCOPE:-local-system}
+      DEPENDENCY_TIMEOUT_SECONDS: ${DEPENDENCY_TIMEOUT_SECONDS:-10}
+      CORS_ALLOWED_ORIGINS: ${CORS_ALLOWED_ORIGINS:-http://localhost:3000}
+    command:
+      - /bin/sh
+      - -c
+      - >-
+        alembic upgrade head &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000
+    ports:
+      - "127.0.0.1:${BACKEND_HOST_PORT:-18000}:8000"
+    volumes:
+      - ./reports:/workspace/reports
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import urllib.request;
+          urllib.request.urlopen('http://localhost:8000/health/ready')
+      interval: 10s
+      timeout: 5s
+      retries: 20
+
+  worker:
+    image: workspace-backend-runtime:local
+    pull_policy: never
+    depends_on:
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: >-
+        postgresql+psycopg://${POSTGRES_USER:-rag}:${POSTGRES_PASSWORD:-rag_dev_only}@postgres:5432/${POSTGRES_DB:-rag}
+      CELERY_BROKER_URL: redis://redis:6379/0
+      MINIO_ENDPOINT: minio:9000
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-minioadmin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY:-minioadmin}
+      COMPLIANCE_MINIO_BUCKET: ${COMPLIANCE_MINIO_BUCKET:-compliance-documents}
+      MINIO_SECURE: "false"
+      QDRANT_CLOUD_URL: http://qdrant:6333
+      QDRANT_CLOUD_API_KEY: ${QDRANT_CLOUD_API_KEY:-}
+      COMPLIANCE_QDRANT_COLLECTION: ${COMPLIANCE_QDRANT_COLLECTION:-compliance_knowledge_v1}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      DEFAULT_EMBEDDING_MODEL: ${DEFAULT_EMBEDDING_MODEL:-text-embedding-3-small}
+      EMBEDDING_DIMENSIONS: ${EMBEDDING_DIMENSIONS:-1536}
+      MAX_CHUNK_CHARACTERS: ${MAX_CHUNK_CHARACTERS:-1200}
+      REVIEW_RETRIEVAL_LIMIT: ${REVIEW_RETRIEVAL_LIMIT:-5}
+      REVIEW_TIMEOUT_SECONDS: ${REVIEW_TIMEOUT_SECONDS:-60}
+      SYSTEM_ACCESS_SCOPE: ${SYSTEM_ACCESS_SCOPE:-local-system}
+      DEPENDENCY_TIMEOUT_SECONDS: ${DEPENDENCY_TIMEOUT_SECONDS:-10}
+    command:
+      - celery
+      - -A
+      - app.worker.celery_app:celery_app
+      - worker
+      - --loglevel=INFO
+      - --queues=compliance_jobs
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - >-
+          celery -A app.worker.celery_app:celery_app inspect ping
+          --destination "celery@$${HOSTNAME}" --timeout 5
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  job-maintenance:
+    image: workspace-backend-runtime:local
+    pull_policy: never
+    depends_on:
+      backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: >-
+        postgresql+psycopg://${POSTGRES_USER:-rag}:${POSTGRES_PASSWORD:-rag_dev_only}@postgres:5432/${POSTGRES_DB:-rag}
+      CELERY_BROKER_URL: redis://redis:6379/0
+      JOB_LEASE_SECONDS: ${JOB_LEASE_SECONDS:-360}
+      JOB_MAX_ATTEMPTS: ${JOB_MAX_ATTEMPTS:-3}
+      OUTBOX_LEASE_SECONDS: ${OUTBOX_LEASE_SECONDS:-60}
+      OUTBOX_BATCH_SIZE: ${OUTBOX_BATCH_SIZE:-50}
+      JOB_MAINTENANCE_INTERVAL_SECONDS: ${JOB_MAINTENANCE_INTERVAL_SECONDS:-2}
+    command:
+      - python
+      - scripts/job_maintenance.py
+    restart: unless-stopped
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - >-
+          import pathlib,time;
+          path=pathlib.Path('/tmp/job-maintenance.ready');
+          raise SystemExit(0 if path.exists() and
+          time.time()-path.stat().st_mtime < 30 else 1)
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  core-import:
+    profiles:
+      - test
+
+    build:
+      context: .
+      dockerfile: rag-core/Dockerfile
+      target: core-import
+
+    working_dir: /workspace/rag-core
+
+    volumes:
+      - ./rag-core:/workspace/rag-core
+
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+
+    command:
+      - python
+      - -c
+      - >-
+        import rag_core;
+        import rag_core.chunking;
+        import rag_core.generation;
+        import rag_core.indexing;
+        import rag_core.retrieval;
+        print(rag_core.__version__)
+
+  core-test:
+    profiles:
+      - test
+
+    build:
+      context: .
+      dockerfile: rag-core/Dockerfile
+      target: test
+
+    working_dir: /workspace/rag-core
+
+    volumes:
+      - ./rag-core:/workspace/rag-core
+
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+
+    command:
+      - pytest
+      - -q
+
+  agent-test:
+    profiles:
+      - test
+
+    build:
+      context: .
+      dockerfile: compliance-agent/agent/Dockerfile
+      target: agent-test
+
+    working_dir: /workspace/compliance-agent/agent
+
+    volumes:
+      - ./rag-core:/workspace/rag-core
+      - ./compliance-agent/agent:/workspace/compliance-agent/agent
+
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+
+    command:
+      - python
+      - -m
+      - pytest
+      - -q
+
+  backend-test:
+    profiles:
+      - test
+
+    build:
+      context: .
+      dockerfile: compliance-agent/backend/Dockerfile
+      target: backend-test
+
+    working_dir: /workspace/compliance-agent/backend
+
+    volumes:
+      - ./rag-core:/workspace/rag-core
+      - ./compliance-agent/agent:/workspace/compliance-agent/agent
+      - ./compliance-agent/backend:/workspace/compliance-agent/backend
+
+    environment:
+      PYTHONDONTWRITEBYTECODE: "1"
+      PYTHONUNBUFFERED: "1"
+
+    command:
+      - python
+      - -m
+      - pytest
+      - -q
+
+volumes:
+  postgres-data:
+  minio-data:
+  qdrant-data:

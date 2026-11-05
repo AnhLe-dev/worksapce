@@ -1,0 +1,464 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Từ điển thuật ngữ Python &amp; Legal RAG</title>
+  <style>
+    :root {
+      --bg:#f6f7fb; --paper:#fff; --ink:#182033; --muted:#667085;
+      --line:#e0e5ee; --nav:#101828; --blue:#3157c8; --cyan:#087e8b;
+      --green:#157347; --amber:#9a6700; --red:#b42318; --purple:#6941c6;
+      --shadow:0 12px 32px rgba(16,24,40,.08); --radius:15px;
+    }
+    *{box-sizing:border-box} html{scroll-behavior:smooth}
+    body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.64 Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+    a{color:var(--blue);text-decoration:none} a:hover{text-decoration:underline}
+    code{padding:.12rem .36rem;border-radius:5px;background:#edf1f8;color:#29416d;font-family:"SFMono-Regular",Consolas,monospace;font-size:.92em}
+    pre{overflow:auto;margin:1rem 0;padding:16px;border:1px solid #2d4269;border-radius:11px;background:#101828;color:#e8eefc;font:13px/1.55 "SFMono-Regular",Consolas,monospace}
+    .side{position:fixed;inset:0 auto 0 0;width:292px;overflow:auto;padding:24px 18px 40px;color:#d7e0ef;background:linear-gradient(160deg,#101828,#193052)}
+    .brand{margin:0;color:#fff;font-size:20px;font-weight:800}.sub{margin:4px 0 18px;color:#9eb0cd;font-size:12px}
+    .search{width:100%;padding:11px 12px;border:1px solid #475775;border-radius:9px;outline:none;background:rgba(255,255,255,.07);color:#fff}
+    .search::placeholder{color:#aab7cb}.nav-title{margin:19px 8px 6px;color:#73d2dc;font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase}
+    nav a{display:block;margin:2px 0;padding:7px 9px;border-radius:7px;color:#c9d4e6;font-size:13px}nav a:hover{background:rgba(255,255,255,.08);color:#fff;text-decoration:none}
+    main{margin-left:292px;padding:32px clamp(24px,5vw,70px) 80px}
+    .hero{position:relative;overflow:hidden;padding:36px;border-radius:21px;background:linear-gradient(125deg,#1b3772,#3157c8 58%,#087e8b);color:#fff;box-shadow:var(--shadow)}
+    .hero::after{content:"Aa";position:absolute;right:28px;top:-15px;color:rgba(255,255,255,.09);font-size:150px;font-weight:900;letter-spacing:-.12em}
+    .hero h1{position:relative;z-index:1;max-width:900px;margin:0 0 10px;font-size:clamp(32px,5vw,53px);line-height:1.05;letter-spacing:-.045em}.hero p{position:relative;z-index:1;max-width:840px;margin:0;color:#dfe8fb}
+    .stats{position:relative;z-index:1;display:flex;flex-wrap:wrap;gap:8px;margin-top:20px}.stat{padding:5px 10px;border:1px solid rgba(255,255,255,.25);border-radius:999px;background:rgba(255,255,255,.1);font-size:12px;font-weight:750}
+    section{margin:30px 0;scroll-margin-top:20px}h2{margin:0 0 7px;color:#173469;font-size:27px;letter-spacing:-.025em}h3{margin:22px 0 9px;color:#264a84;font-size:20px}h4{margin:0 0 7px;color:#304a75}.muted{color:var(--muted)}
+    .card{padding:19px;border:1px solid var(--line);border-radius:var(--radius);background:var(--paper);box-shadow:var(--shadow)}.grid{display:grid;gap:14px}.grid.two{grid-template-columns:repeat(2,minmax(0,1fr))}.grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}
+    .callout{margin:14px 0;padding:13px 15px;border-left:4px solid var(--blue);border-radius:8px;background:#edf3ff}.callout.warn{border-color:var(--amber);background:#fff7e4}.callout.ok{border-color:var(--green);background:#eaf8f1}
+    .flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px;padding:17px;border:1px solid var(--line);border-radius:var(--radius);background:#fff;box-shadow:var(--shadow)}
+    .node{display:flex;min-width:135px;flex:1 1 145px;flex-direction:column;justify-content:center;padding:12px;border:1px solid #b7c7e4;border-radius:10px;background:#f2f6ff;text-align:center;font-weight:780}.node small{margin-top:4px;color:var(--muted);font-weight:500}.node.port{border-color:#70c4cc;background:#ecfbfc}.node.adapter{border-color:#bea9e6;background:#f6f0ff}.node.store{border-color:#efc36b;background:#fff8e7}.arrow{display:grid;place-items:center;color:var(--blue);font-size:22px;font-weight:900}
+    .filters{display:flex;flex-wrap:wrap;gap:7px;margin:13px 0 17px}.filter{padding:7px 11px;border:1px solid #cbd4e2;border-radius:999px;background:#fff;color:#344054;cursor:pointer;font-weight:680}.filter:hover,.filter.active{border-color:var(--blue);background:var(--blue);color:#fff}
+    .glossary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px}.term{display:flex;flex-direction:column;padding:17px;border:1px solid var(--line);border-radius:13px;background:#fff;box-shadow:0 8px 24px rgba(16,24,40,.055)}.term.hidden{display:none}.term-top{display:flex;gap:9px;align-items:flex-start;justify-content:space-between}.term h3{margin:0;color:#193d7a;font-size:18px}.english{display:block;margin-top:2px;color:var(--muted);font-size:12px;font-weight:500}.cat{flex:0 0 auto;padding:3px 8px;border-radius:999px;background:#eef2f8;color:#44516b;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.04em}.definition{margin:11px 0 8px}.project,.confuse{margin-top:8px;padding:9px 10px;border-radius:8px;font-size:13px}.project{background:#eef8f9}.confuse{background:#fff6e5}.label{font-weight:800}.source{margin-top:auto;padding-top:10px;font-size:12px}
+    .compare{width:100%;border-collapse:collapse}.compare th,.compare td{padding:10px 11px;border:1px solid var(--line);vertical-align:top;text-align:left}.compare th{background:#eef2f8;color:#35415a;font-size:12px;text-transform:uppercase}
+    .badge{display:inline-block;padding:3px 8px;border-radius:999px;font-size:11px;font-weight:800}.badge.now{background:#dff6e9;color:#11643e}.badge.target{background:#fff0c2;color:#7b5200}
+    .empty{display:none;padding:28px;border:1px dashed #aeb9ca;border-radius:12px;background:#fff;text-align:center;color:var(--muted)}
+    footer{margin-top:44px;padding-top:18px;border-top:1px solid var(--line);color:var(--muted);font-size:12px}
+    @media(max-width:1000px){.side{position:static;width:auto}.side nav{columns:2}main{margin-left:0}.grid.two,.grid.three,.glossary{grid-template-columns:1fr}}
+    @media(max-width:620px){main{padding:18px 12px 50px}.hero{padding:25px 18px}.side nav{columns:1}.arrow{flex-basis:100%;transform:rotate(90deg)}}
+    @media print{body{background:#fff;font-size:11px}.side{display:none}main{margin:0;padding:0}.hero{border:2px solid #333;background:#fff;color:#111;box-shadow:none}.hero p{color:#333}.stat{border-color:#777}.card,.flow,.term{box-shadow:none;break-inside:avoid}.filters{display:none}.glossary{grid-template-columns:1fr 1fr}a{color:#111;text-decoration:underline}}
+  </style>
+</head>
+<body>
+  <aside class="side">
+    <h1 class="brand">Từ điển dự án</h1>
+    <p class="sub">Python · Architecture · PDF · RAG · Backend · Testing</p>
+    <input id="search" class="search" type="search" placeholder="Tìm: ports, geometry, outbox…" aria-label="Tìm thuật ngữ">
+    <nav>
+      <div class="nav-title">Học nhanh</div>
+      <a href="#scope">Phạm vi &amp; cách đọc</a>
+      <a href="#ports-adapters">Ports &amp; Adapters</a>
+      <a href="#invariant-failure">Invariant &amp; Failure</a>
+      <a href="#geometry-provenance">Geometry &amp; Provenance</a>
+      <a href="#orchestration">Orchestration</a>
+      <a href="#rag-flow">Luồng RAG</a>
+      <a href="#outbox-flow">Jobs &amp; Outbox</a>
+      <a href="#testing-levels">Các mức kiểm thử</a>
+      <div class="nav-title">Tra cứu</div>
+      <a href="#glossary">Từ điển A–Z</a>
+      <a href="review-p0-p2.html">Review guide P0–P2</a>
+    </nav>
+  </aside>
+
+  <main>
+    <header class="hero">
+      <h1>Từ điển thuật ngữ Python &amp; Legal RAG</h1>
+      <p>Giải thích bằng tiếng Việt các khái niệm xuất hiện trong migration P0–P2: từ <strong>Protocol, Port, Invariant</strong> đến <strong>Geometry, Provenance, Orchestration, Retrieval, Transactional Outbox</strong>. Mỗi mục đi kèm ví dụ dự án và nhầm lẫn cần tránh.</p>
+      <div class="stats"><span class="stat" id="term-count">Đang đếm thuật ngữ…</span><span class="stat">7 nhóm chủ đề</span><span class="stat">Offline · Không CDN</span><span class="stat">Cập nhật 04/11/2026</span></div>
+    </header>
+
+    <section id="scope">
+      <h2>Phạm vi và cách đọc</h2>
+      <div class="grid three">
+        <article class="card"><h3>Định nghĩa</h3><p>Nói thuật ngữ là gì bằng ngôn ngữ dễ hiểu, sau đó mới đến ý nghĩa kỹ thuật.</p></article>
+        <article class="card"><h3>Trong dự án</h3><p>Chỉ ra thuật ngữ xuất hiện ở file hoặc luồng nào của Generic RAG Core và backend.</p></article>
+        <article class="card"><h3>Dễ nhầm</h3><p>Phân biệt các khái niệm gần nhau để tránh học thuộc tên nhưng dùng sai kiến trúc.</p></article>
+      </div>
+      <div class="callout warn"><strong>Giới hạn:</strong> “tất cả” ở đây nghĩa là các thuật ngữ Python và chuyên ngành cần để đọc/triển khai P0–P2 của project này; không phải bách khoa toàn bộ ngôn ngữ Python. Thuật ngữ backend P2 có thể là <span class="badge target">TO-BE</span>, không khẳng định code hiện đã chạy.</div>
+    </section>
+
+    <section id="ports-adapters">
+      <h2>1 · Ports &amp; Adapters — hiểu bằng ổ cắm</h2>
+      <div class="flow">
+        <div class="node">Application Service<small>Biết cần làm gì</small></div><div class="arrow">→</div>
+        <div class="node port">Port / Protocol<small>Quy định hình dạng ổ cắm</small></div><div class="arrow">←</div>
+        <div class="node adapter">Adapter cụ thể<small>OpenAI, Qdrant, TXT, PDF</small></div>
+      </div>
+      <div class="grid two">
+        <article class="card"><h3>Port là gì?</h3><p>Port là giao diện nhỏ mô tả capability mà logic lõi cần, không nói nhà cung cấp nào thực hiện. Ví dụ <code>EmbeddingProvider</code> chỉ yêu cầu hàm nhận texts và trả vectors.</p><p><a href="../rag-core/src/rag_core/indexing/ports.py">Xem indexing/ports.py</a></p></article>
+        <article class="card"><h3>Adapter là gì?</h3><p>Adapter chuyển API của công nghệ cụ thể thành hình dạng port. <code>OpenAIEmbeddingProvider</code> bọc OpenAI; <code>QdrantVectorIndex</code> bọc Qdrant.</p><p><a href="../rag-core/src/rag_core/adapters/qdrant.py">Xem adapters/qdrant.py</a></p></article>
+      </div>
+      <div class="callout"><strong>Quy tắc:</strong> service phụ thuộc Port; Adapter phụ thuộc Port; Port không phụ thuộc Adapter. Nhờ vậy unit test dùng Fake adapter mà không cần mạng.</div>
+    </section>
+
+    <section id="invariant-failure">
+      <h2>2 · Invariant, Validation và Failure condition</h2>
+      <table class="compare">
+        <thead><tr><th>Khái niệm</th><th>Câu hỏi</th><th>Ví dụ dự án</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Invariant</strong></td><td>Điều gì phải luôn đúng khi object tồn tại hợp lệ?</td><td>Checksum luôn là 64 ký tự hex; bbox có chiều rộng/cao dương; chunk không trộn paged và unpaged spans.</td></tr>
+          <tr><td><strong>Precondition</strong></td><td>Điều gì phải đúng trước khi hàm chạy?</td><td><code>expected_dimensions &gt; 0</code>; input file phải tồn tại.</td></tr>
+          <tr><td><strong>Postcondition</strong></td><td>Sau khi hàm thành công, điều gì được đảm bảo?</td><td>Mỗi vector tương ứng đúng một chunk và đúng dimension.</td></tr>
+          <tr><td><strong>Failure condition</strong></td><td>Trường hợp nào hàm phải dừng và báo lỗi?</td><td>PDF không có text → <code>OCR_REQUIRED</code>; checksum thay đổi → mismatch error.</td></tr>
+        </tbody>
+      </table>
+      <pre>SourceSpan hợp lệ:
+  page_number + bbox + page_width + page_height phải đi cùng nhau
+  char_start và char_end phải đi cùng nhau
+  char_end > char_start
+
+Nếu một điều kiện sai → object không được tạo → dữ liệu sai không đi tiếp.</pre>
+      <p><a href="../rag-core/src/rag_core/ingestion/models.py">Xem invariants trong ingestion/models.py</a> · <a href="../rag-core/src/rag_core/ingestion/errors.py">Xem typed failures trong errors.py</a></p>
+    </section>
+
+    <section id="geometry-provenance">
+      <h2>3 · Geometry, Span, Provenance và Lineage</h2>
+      <div class="flow">
+        <div class="node">PDF Page<small>width × height</small></div><div class="arrow">→</div>
+        <div class="node port">BBox<small>(x0, y0, x1, y1)</small></div><div class="arrow">→</div>
+        <div class="node">ExtractedBlock<small>text + SourceSpan</small></div><div class="arrow">→</div>
+        <div class="node">DocumentChunk<small>nhiều source spans</small></div><div class="arrow">→</div>
+        <div class="node adapter">Citation/Highlight<small>quay về đúng nguồn</small></div>
+      </div>
+      <div class="grid two">
+        <article class="card"><h3>Geometry</h3><p>Dữ liệu hình học mô tả vị trí vật lý trên trang: kích thước trang và bounding box. Nó trả lời “đoạn này nằm ở đâu?”, không trả lời “đoạn này có ý nghĩa gì?”.</p></article>
+        <article class="card"><h3>Provenance và Lineage</h3><p><strong>Provenance</strong> là bằng chứng nguồn gốc của dữ liệu. <strong>Lineage</strong> là chuỗi biến đổi của dữ liệu qua các stage. Trong project: file → block → chunk → vector payload → retrieval hit → citation.</p></article>
+      </div>
+      <div class="callout warn"><strong>Không được suy diễn:</strong> char offset không thể tự biến thành bbox. Nếu extractor không có geometry thật, UI phải hiển thị “không có vị trí highlight”.</div>
+    </section>
+
+    <section id="orchestration">
+      <h2>4 · Orchestration — điều phối, không làm thay</h2>
+      <div class="flow">
+        <div class="node">DocumentInput</div><div class="arrow">→</div>
+        <div class="node port">DocumentProcessor<small>orchestrator</small></div><div class="arrow">→</div>
+        <div class="node">Loader</div><div class="arrow">→</div>
+        <div class="node">Extractor</div><div class="arrow">→</div>
+        <div class="node">Parser</div><div class="arrow">→</div>
+        <div class="node">Chunker</div>
+      </div>
+      <p>Orchestrator quyết định <em>thứ tự và sự phối hợp</em>, nhưng không chứa thuật toán chi tiết của từng bước. <code>DocumentProcessor</code> chọn extractor rồi gọi parse/chunk; nó không tự đọc PDF, tự split paragraph hay gọi Qdrant.</p>
+      <p><a href="../rag-core/src/rag_core/ingestion/service.py">Xem ingestion/service.py</a></p>
+    </section>
+
+    <section id="rag-flow">
+      <h2>5 · Luồng RAG và các thuật ngữ cốt lõi</h2>
+      <div class="flow">
+        <div class="node">Documents</div><div class="arrow">→</div>
+        <div class="node">Chunks</div><div class="arrow">→</div>
+        <div class="node adapter">Embeddings<small>text → vector</small></div><div class="arrow">→</div>
+        <div class="node store">Vector Index</div><div class="arrow">→</div>
+        <div class="node">Retrieval Hits</div><div class="arrow">→</div>
+        <div class="node port">Grounded Context</div><div class="arrow">→</div>
+        <div class="node">Answer + Citations</div>
+      </div>
+      <div class="callout"><strong>RAG không “dạy” model kiến thức mới:</strong> nó tìm evidence liên quan và đặt evidence vào context tại thời điểm hỏi. Citation hợp lệ chứng minh mapping tới evidence, không tự chứng minh kết luận đúng pháp lý.</div>
+    </section>
+
+    <section id="outbox-flow">
+      <h2>6 · Job, Queue và Transactional Outbox</h2>
+      <div class="flow">
+        <div class="node">API/Service<small>create resource + job</small></div><div class="arrow">→</div>
+        <div class="node store">DB transaction<small>job + outbox event</small></div><div class="arrow">→</div>
+        <div class="node">Outbox Relay<small>publish/ack/retry</small></div><div class="arrow">→</div>
+        <div class="node adapter">Redis/Celery<small>{job_id}</small></div><div class="arrow">→</div>
+        <div class="node port">Worker<small>claim + lease + attempt</small></div>
+      </div>
+      <p>Outbox giải quyết “crash gap”: DB đã commit job nhưng process chết trước khi gửi message. Vì event nằm cùng transaction với job, relay có thể tìm lại và publish sau.</p>
+      <div class="callout warn"><strong>At-least-once:</strong> message có thể đến nhiều lần, nên worker phải idempotent và dùng attempt/lease/CAS để job cũ không ghi đè kết quả mới.</div>
+    </section>
+
+    <section id="testing-levels">
+      <h2>7 · Các mức kiểm thử và acceptance</h2>
+      <table class="compare">
+        <thead><tr><th>Mức</th><th>Chứng minh được</th><th>Không chứng minh được</th></tr></thead>
+        <tbody>
+          <tr><td>Unit test</td><td>Một class/function đúng với fake inputs.</td><td>DB, network, provider thật.</td></tr>
+          <tr><td>Contract test</td><td>Hai phía thống nhất schema/interface.</td><td>Luồng triển khai hoàn chỉnh.</td></tr>
+          <tr><td>Integration test</td><td>Nhiều component phối hợp với dependency cụ thể.</td><td>Toàn hành trình người dùng.</td></tr>
+          <tr><td>E2E test</td><td>Luồng từ entrypoint đến kết quả cuối trong môi trường xác định.</td><td>Production security/legal correctness nếu không có test riêng.</td></tr>
+          <tr><td>OFFLINE_VERIFIED</td><td>Fake/local assertions đã chạy.</td><td>Provider/cloud/live acceptance.</td></tr>
+          <tr><td>LIVE_ACCEPTED</td><td>Provider/infrastructure thật đã chạy có evidence.</td><td>Khẳng định mọi tải, mọi tài liệu, mọi kết luận pháp lý.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="glossary">
+      <h2>Từ điển thuật ngữ A–Z</h2>
+      <p class="muted">Dùng ô tìm kiếm bên trái hoặc lọc theo nhóm. Tìm kiếm hỗ trợ cả tiếng Việt và tiếng Anh.</p>
+      <div id="filters" class="filters" aria-label="Lọc theo nhóm"></div>
+      <div id="glossary-grid" class="glossary"></div>
+      <div id="empty" class="empty">Không tìm thấy thuật ngữ phù hợp.</div>
+    </section>
+
+    <footer>
+      <p><strong>Nguồn áp dụng:</strong> source hiện tại trong <code>rag-core</code>, kiến trúc đích P0–P2 và tài liệu <a href="review-p0-p2.html">review-p0-p2.html</a>. Những mục về backend/outbox có thể là TO-BE cho đến khi code và tests tồn tại.</p>
+      <p>File tự chứa, không dùng CDN. Nhấn Ctrl/Cmd + P để in hoặc xuất PDF.</p>
+    </footer>
+  </main>
+
+  <script>
+    const terms = [
+      {t:"Module",en:"Python module",c:"Python",d:"Một file .py chứa code Python và tạo một namespace riêng.",p:"loading.py, models.py và service.py là các module có trách nhiệm khác nhau.",x:"Module không đồng nghĩa package; package là thư mục tập hợp nhiều module.",l:"../rag-core/src/rag_core/ingestion/loading.py"},
+      {t:"Package",en:"Python package",c:"Python",d:"Một nhóm module có thể import bằng đường dẫn như rag_core.ingestion. Thường là thư mục có __init__.py.",p:"rag_core, ingestion, chunking và indexing là packages.",x:"__init__.py không nên eager-import optional SDK vì sẽ làm import package thất bại."},
+      {t:"Namespace",en:"Namespace",c:"Python",d:"Không gian ánh xạ tên tới object, giúp hai module có thể dùng cùng tên mà không xung đột.",p:"ingestion.models.DocumentSource và một model cùng tên ở package khác có namespace khác.",x:"Namespace package là một cơ chế Python riêng; project này ưu tiên __init__.py rõ ràng."},
+      {t:"Import",en:"Import",c:"Python",d:"Cơ chế đưa tên/object từ module khác vào module hiện tại.",p:"service.py import ports, models và loading để phối hợp flow.",x:"Import direction chính là dependency direction; import sai có thể phá kiến trúc."},
+      {t:"Public API",en:"Public programming interface",c:"Python",d:"Các class/function được chủ ý cho consumer sử dụng và được cam kết ổn định hơn implementation nội bộ.",p:"DocumentProcessor và DocumentInput có thể là public API; hàm _stable_id có dấu gạch dưới là nội bộ.",x:"Public API của package khác với HTTP API của backend."},
+      {t:"Class",en:"Class",c:"Python",d:"Khuôn mẫu định nghĩa dữ liệu và hành vi của một loại object.",p:"DocumentProcessor, TextDocumentExtractor và QdrantVectorIndex là classes.",x:"Class là khuôn; instance là object cụ thể được tạo từ class."},
+      {t:"Instance",en:"Object instance",c:"Python",d:"Một object cụ thể được tạo từ class, có trạng thái riêng.",p:"DocumentProcessor(extractors=..., parser=..., chunking_strategy=...) tạo một instance.",x:"Hai instances cùng class có thể giữ dependency/config khác nhau."},
+      {t:"Function",en:"Function",c:"Python",d:"Khối logic có tên, nhận tham số và có thể trả kết quả; không gắn bắt buộc với instance.",p:"calculate_file_sha256(path) là function.",x:"Method là function được định nghĩa trong class."},
+      {t:"Method",en:"Method",c:"Python",d:"Function thuộc class, thường thao tác với instance qua self hoặc class qua cls.",p:"DocumentProcessor.process() và PdfDocumentExtractor.extract() là methods.",x:"@staticmethod không nhận self; @classmethod nhận cls."},
+      {t:"Attribute",en:"Attribute",c:"Python",d:"Dữ liệu hoặc callable được truy cập qua object/class bằng dấu chấm.",p:"chunk.source_id và processor._extractors là attributes.",x:"Attribute bắt đầu bằng _ được xem là nội bộ theo quy ước, không phải bảo mật."},
+      {t:"Decorator",en:"Decorator",c:"Python",d:"Cú pháp @... bọc hoặc khai báo thêm behavior cho function/class.",p:"@field_validator và @model_validator gắn validation vào Pydantic model.",x:"Decorator có thể chạy ở thời điểm định nghĩa/import; cần tránh side effect bất ngờ."},
+      {t:"Type annotation",en:"Type hint",c:"Python",d:"Chú thích kiểu dữ liệu để IDE, type checker và người đọc hiểu contract; Python thường không tự enforce mọi annotation.",p:"tuple[DocumentChunk, ...] cho biết output là tuple chunks.",x:"Pydantic dùng annotations để validate runtime, nhưng Python function thường chỉ dùng làm hint."},
+      {t:"Union / Optional",en:"Union type / optional value",c:"Python",d:"Kiểu A | B cho phép nhiều kiểu; T | None cho phép thiếu giá trị.",p:"page_number: int | None vì TXT không có page.",x:"Optional không có nghĩa field tự có default None; phải khai báo default nếu muốn bỏ qua khi tạo object."},
+      {t:"Protocol",en:"Structural interface",c:"Python",d:"Giao diện theo structural typing: object phù hợp nếu có đúng methods/attributes, không cần kế thừa trực tiếp.",p:"DocumentExtractor, EmbeddingProvider và VectorIndex là Protocols.",x:"Protocol mô tả shape; nó không phải concrete implementation.",l:"../rag-core/src/rag_core/indexing/ports.py"},
+      {t:"Iterable",en:"Iterable",c:"Python",d:"Object có thể lặp qua bằng for; không cam kết có index hoặc length.",p:"DocumentProcessor nhận Iterable[DocumentExtractor].",x:"Sequence mạnh hơn Iterable vì có ordering/index/len contract."},
+      {t:"Sequence",en:"Sequence",c:"Python",d:"Tập có thứ tự, hỗ trợ truy cập theo vị trí; list và tuple là examples.",p:"Embedding adapter trả Sequence[Sequence[float]].",x:"Sequence không đảm bảo mutable; tuple là immutable sequence."},
+      {t:"Tuple",en:"Tuple",c:"Python",d:"Sequence bất biến, phù hợp cho output đã chốt và identity composite.",p:"source_spans và structure_path dùng tuple.",x:"Tuple bất biến ở container level; phần tử bên trong vẫn có thể mutable nếu kiểu của nó cho phép."},
+      {t:"Dictionary",en:"dict / mapping",c:"Python",d:"Cấu trúc key-value dùng để tra cứu nhanh và biểu diễn payload/metadata.",p:"metadata: dict[str, str] và Qdrant payload là dictionaries.",x:"Dict mở dễ làm schema lỏng; core fields quan trọng nên dùng typed models."},
+      {t:"Set",en:"set",c:"Python",d:"Tập phần tử duy nhất, không dùng để giữ thứ tự nghiệp vụ.",p:"Service dùng set để phát hiện duplicate chunk IDs hoặc mixed identities.",x:"Không serialize set trực tiếp vào JSON; thường chuyển sang list/tuple."},
+      {t:"Enum / StrEnum",en:"Enumeration",c:"Python",d:"Tập giá trị hữu hạn có tên; StrEnum đồng thời có string value ổn định.",p:"DocumentRole.CONTRACT và IndexingStatus.INDEXED.",x:"Enum kỹ thuật không nên trộn với domain review outcome."},
+      {t:"Exception",en:"Exception",c:"Python",d:"Object biểu diễn failure và làm gián đoạn flow bình thường cho đến khi được bắt hoặc đi lên caller.",p:"OcrRequiredError dừng pipeline khi PDF không có text.",x:"Không nên catch Exception rộng rồi giả thành kết quả thành công."},
+      {t:"Typed exception",en:"Custom typed error",c:"Python",d:"Exception class riêng có code/meaning ổn định, giúp caller xử lý theo loại thay vì dò message.",p:"DocumentProcessingError có DocumentErrorCode.",x:"Typed error không có nghĩa phải để lộ stack trace ra HTTP response.",l:"../rag-core/src/rag_core/ingestion/errors.py"},
+      {t:"Context manager",en:"with context",c:"Python",d:"Cơ chế đảm bảo acquire/release tài nguyên quanh block code, kể cả khi exception xảy ra.",p:"Mở PDF/file hoặc DB session nên dùng with.",x:"Context manager không tự đảm bảo transaction đúng nếu implementation không rollback/commit phù hợp."},
+      {t:"Async / Await",en:"Asynchronous programming",c:"Python",d:"Cách nhường event loop khi chờ I/O để process phục vụ việc khác, không làm CPU code tự nhanh hơn.",p:"FastAPI upload/HTTP handlers có thể async; core deterministic processing có thể sync.",x:"Gọi hàm blocking trong async route vẫn chặn event loop."},
+      {t:"Pydantic BaseModel",en:"Runtime validated model",c:"Python",d:"Model dùng type annotations để parse/validate dữ liệu runtime và serialize có schema.",p:"DocumentInput, SourceSpan và IndexingResult kế thừa BaseModel.",x:"Pydantic model không phải SQLAlchemy ORM record."},
+      {t:"Field constraint",en:"Pydantic Field",c:"Python",d:"Ràng buộc khai báo như min_length, gt, pattern trên từng field.",p:"Checksum bắt buộc 64 ký tự hex; page_number >= 1.",x:"Field constraints chỉ kiểm từng field; invariant liên-field cần model validator."},
+      {t:"Field validator",en:"@field_validator",c:"Python",d:"Validation/normalization cho một hoặc nhiều field riêng lẻ.",p:"Strip whitespace khỏi source_id/access_scope trước khi kiểm min_length.",x:"Không phù hợp để so sánh nhiều fields phụ thuộc nhau."},
+      {t:"Model validator",en:"@model_validator",c:"Python",d:"Validation toàn model sau hoặc trước khi fields được xử lý.",p:"SourceSpan kiểm bbox/page dimensions và char offsets đi theo nhóm.",x:"Validator nên deterministic và tránh I/O/network."},
+      {t:"Frozen model",en:"Immutable Pydantic model",c:"Python",d:"Model không cho sửa field sau khi tạo, giúp value object ổn định.",p:"DocumentSource/DocumentChunk dùng ConfigDict(frozen=True).",x:"Frozen không thay thế database immutability constraint."},
+      {t:"Serialization",en:"Object to transferable data",c:"Python",d:"Chuyển object thành dict/JSON/bytes để lưu hoặc truyền.",p:"source span model_dump(mode='json') đi vào Qdrant payload.",x:"Serialize không tự đảm bảo schema version compatibility."},
+      {t:"Deserialization",en:"Transferable data to object",c:"Python",d:"Đọc dict/JSON/bytes và tạo object typed, thường kèm validation.",p:"Pydantic model_validate đọc payload thành model.",x:"Dữ liệu bên ngoài luôn cần validate; không tin dict chỉ vì parse JSON thành công."},
+      {t:"Dependency injection",en:"DI",c:"Kiến trúc",d:"Truyền dependency từ ngoài vào thay vì class tự tạo provider/database bên trong.",p:"DocumentProcessor nhận extractors, parser và chunking_strategy qua constructor.",x:"DI không bắt buộc framework/container; constructor injection đã là DI."},
+      {t:"Composition",en:"Object composition",c:"Kiến trúc",d:"Xây behavior lớn bằng cách ghép các object nhỏ thay vì kế thừa sâu.",p:"Processor ghép Loader + Extractor + Parser + Chunker.",x:"Composition khác orchestration: composition là cấu tạo; orchestration là điều phối khi chạy."},
+      {t:"Inheritance",en:"Kế thừa",c:"Python",d:"Class con nhận behavior/type relationship từ class cha.",p:"Custom errors kế thừa DocumentProcessingError.",x:"Ports dùng Protocol nên adapter không nhất thiết phải kế thừa trực tiếp."},
+      {t:"Polymorphism",en:"Đa hình",c:"Kiến trúc",d:"Nhiều implementation có thể được dùng qua cùng interface.",p:"TextDocumentExtractor và PdfDocumentExtractor đều dùng qua DocumentExtractor port.",x:"Đa hình không có nghĩa mọi implementation có cùng failure behavior nếu contract không nói rõ."},
+
+      {t:"Port",en:"Port",c:"Kiến trúc",d:"Interface/capability mà core yêu cầu hoặc cung cấp; tách policy khỏi công nghệ cụ thể.",p:"EmbeddingProvider là outbound port; DocumentProcessor có thể xem như inbound application capability.",x:"Port không phải network port như 8000/5432.",l:"../rag-core/src/rag_core/ingestion/ports.py"},
+      {t:"Adapter",en:"Adapter",c:"Kiến trúc",d:"Implementation chuyển interface của thư viện/hệ thống ngoài thành Port của ứng dụng.",p:"QdrantVectorIndex chuyển Qdrant API thành VectorIndex.",x:"Adapter không nên chứa business verdict hoặc quyền truy cập."},
+      {t:"Interface / Contract",en:"Programming contract",c:"Kiến trúc",d:"Cam kết về input, output, failure và invariants giữa hai component.",p:"VectorIndex.upsert(chunks, vectors) -> IndexingResult.",x:"Tên method giống nhau chưa đủ; semantics/failure cũng thuộc contract."},
+      {t:"Abstraction",en:"Trừu tượng hóa",c:"Kiến trúc",d:"Chỉ giữ chi tiết cần thiết cho consumer và ẩn cơ chế triển khai phía dưới.",p:"EmbeddingProvider ẩn HTTP/API format của OpenAI.",x:"Abstraction quá chung có thể làm mất invariant quan trọng."},
+      {t:"Boundary",en:"Ranh giới",c:"Kiến trúc",d:"Điểm phân chia trách nhiệm/trust/dependency giữa module hoặc hệ thống.",p:"rag_core không vượt boundary sang FastAPI/SQLAlchemy; backend không cho request tự cấp scope.",x:"Folder boundary chỉ có ý nghĩa nếu import/test enforce nó."},
+      {t:"Layer",en:"Tầng kiến trúc",c:"Kiến trúc",d:"Nhóm trách nhiệm ở cùng mức, thường có dependency direction rõ.",p:"Domain models, application services, adapters và API là các layers.",x:"Layer không nhất thiết là service deploy riêng."},
+      {t:"Coupling",en:"Độ phụ thuộc",c:"Kiến trúc",d:"Mức một module biết/phụ thuộc chi tiết module khác. Coupling thấp giúp thay thế và test dễ.",p:"Core import LangChain trực tiếp trong service là coupling cao.",x:"Không thể loại bỏ mọi coupling; mục tiêu là coupling đúng hướng và qua contract."},
+      {t:"Cohesion",en:"Độ tập trung trách nhiệm",c:"Kiến trúc",d:"Mức các thành phần trong module cùng phục vụ một mục tiêu rõ ràng.",p:"loading.py chỉ chịu trách nhiệm path/format/checksum validation.",x:"Module ít dòng chưa chắc cohesion cao nếu trộn nhiều lý do thay đổi."},
+      {t:"Dependency direction",en:"Hướng phụ thuộc",c:"Kiến trúc",d:"Chiều import/call giữa layers; layer ổn định không nên phụ thuộc layer chi tiết hơn.",p:"service -> port <- adapter, không phải service -> Qdrant SDK.",x:"Runtime call có thể đi ra adapter nhưng source dependency vẫn hướng vào port."},
+      {t:"Dependency inversion",en:"DIP",c:"Kiến trúc",d:"Policy cấp cao phụ thuộc abstraction; implementation cấp thấp cũng phụ thuộc abstraction đó.",p:"DocumentIndexingService và QdrantVectorIndex cùng phụ thuộc VectorIndex contract.",x:"DI và DIP liên quan nhưng khác: DI là cách cung cấp object; DIP là nguyên tắc dependency."},
+      {t:"Composition root",en:"Composition root",c:"Kiến trúc",d:"Nơi duy nhất tạo concrete dependencies và nối chúng thành application runtime.",p:"Backend runtime/main sẽ tạo DB, MinIO, OpenAI, Qdrant rồi inject vào services.",x:"Core package root __init__.py không phải composition root provider."},
+      {t:"Orchestration",en:"Điều phối",c:"Kiến trúc",d:"Điều khiển thứ tự và phối hợp nhiều capability để hoàn thành một use case.",p:"DocumentProcessor gọi load -> extract -> parse -> chunk.",x:"Orchestrator không nên tự chứa mọi thuật toán chi tiết.",l:"../rag-core/src/rag_core/ingestion/service.py"},
+      {t:"Application service",en:"Use-case service",c:"Kiến trúc",d:"Class/function điều phối một use case ở boundary ứng dụng.",p:"DocumentIndexingService validate/embedding/upsert một snapshot.",x:"Application service khác domain model; nó thường stateless ngoài injected dependencies."},
+      {t:"Domain service",en:"Domain service",c:"Kiến trúc",d:"Logic nghiệp vụ không tự nhiên thuộc một entity/value object cụ thể.",p:"Generic ClauseSegmenter hoặc KB membership policy có thể là domain services.",x:"Không phải mọi file tên service.py đều là domain service."},
+      {t:"Repository",en:"Repository pattern",c:"Kiến trúc",d:"Giao diện truy cập/persist domain entities như một collection, che SQL/ORM khỏi service.",p:"ContractRepository sẽ get/save ContractDocument và ReviewUnits.",x:"Repository không nên chứa orchestration provider hoặc HTTP mapping."},
+      {t:"DTO",en:"Data Transfer Object",c:"Kiến trúc",d:"Object dùng để truyền dữ liệu qua boundary, ưu tiên schema rõ và ít behavior.",p:"HTTP request/response models và JobSummary là DTOs.",x:"DTO không nhất thiết là domain entity hay ORM record."},
+      {t:"Schema",en:"Data schema",c:"Kiến trúc",d:"Định nghĩa cấu trúc, kiểu, ràng buộc và version của dữ liệu.",p:"Pydantic schema, OpenAPI schema và Qdrant payload schema.",x:"Schema ở các boundary khác nhau không nên dùng chung mù quáng."},
+      {t:"Entity",en:"Domain entity",c:"Kiến trúc",d:"Object có identity ổn định xuyên thời gian dù attributes có thể thay đổi theo lifecycle.",p:"ContractDocument và KnowledgeBase là entities.",x:"Hai entities cùng checksum vẫn khác identity."},
+      {t:"Value object",en:"Value object",c:"Kiến trúc",d:"Object được nhận diện bằng toàn bộ giá trị, thường immutable và không có identity riêng.",p:"SourceSpan hoặc KnowledgeScope là value objects.",x:"Không nên gán database ID vô nghĩa cho mọi value object."},
+      {t:"Invariant",en:"Bất biến",c:"Kiến trúc",d:"Điều kiện phải luôn đúng đối với object/state hợp lệ.",p:"DocumentChunk lineage phải khớp DocumentSource.",x:"Invariant khác default; default chỉ là giá trị khi caller không cung cấp.",l:"../rag-core/src/rag_core/ingestion/models.py"},
+      {t:"Precondition",en:"Điều kiện trước",c:"Kiến trúc",d:"Điều kiện caller phải đáp ứng trước khi operation có thể chạy đúng.",p:"Indexing request phải có ít nhất một chunk và một source snapshot.",x:"Nên validate sớm trước side effect/provider call."},
+      {t:"Postcondition",en:"Điều kiện sau",c:"Kiến trúc",d:"Cam kết đúng khi operation hoàn thành thành công.",p:"IndexingResult stored_count phản ánh snapshot đã verify.",x:"Return không exception chưa chắc đủ; postcondition cần assertions/verification."},
+      {t:"Failure condition",en:"Điều kiện thất bại",c:"Kiến trúc",d:"Tình huống được xác định trước khiến operation phải dừng hoặc chuyển state lỗi.",p:"Vector dimension mismatch, OCR required, source conflict.",x:"Failure condition dự kiến khác programmer bug không dự kiến."},
+      {t:"Side effect",en:"Tác dụng phụ",c:"Kiến trúc",d:"Thay đổi ngoài return value: ghi DB/file, gọi network, publish message, log.",p:"Qdrant upsert và MinIO upload là side effects; Pydantic validation thì không.",x:"Side effect cần transaction/idempotency/retry strategy."},
+      {t:"Idempotency",en:"Tính lũy đẳng",c:"Kiến trúc",d:"Thực hiện cùng operation nhiều lần cho cùng identity không tạo kết quả phụ khác nhau.",p:"Index cùng immutable snapshot lần hai trả UNCHANGED thay vì duplicate vectors.",x:"Idempotent không đồng nghĩa exactly-once delivery."},
+      {t:"Deterministic",en:"Tất định",c:"Kiến trúc",d:"Cùng input/config luôn tạo cùng output, không phụ thuộc ngẫu nhiên/thời gian ẩn.",p:"Chunk ID tạo bằng SHA-256 từ source identity/structure/part.",x:"LLM generation thường không hoàn toàn deterministic."},
+      {t:"Lifecycle",en:"Vòng đời",c:"Kiến trúc",d:"Các state và transition hợp lệ của entity/job từ lúc tạo đến kết thúc.",p:"Job queued -> running/retry -> succeeded/failed.",x:"Lifecycle domain document khác lifecycle technical job."},
+      {t:"State machine",en:"Máy trạng thái",c:"Kiến trúc",d:"Mô hình giới hạn tập state và transition được phép.",p:"Không cho job từ succeeded quay lại running tùy ý.",x:"Enum state thôi chưa đủ; phải enforce transition."},
+      {t:"Trust boundary",en:"Ranh giới tin cậy",c:"Kiến trúc",d:"Điểm dữ liệu đi từ nguồn ít tin cậy sang vùng được tin sau validation/authorization.",p:"HTTP request và broker message không được tự cấp access_scope.",x:"Internal network không tự động làm dữ liệu đáng tin."},
+      {t:"Authority / Source of truth",en:"Nguồn sự thật có thẩm quyền",c:"Kiến trúc",d:"Hệ thống duy nhất được quyền quyết định một loại state/quyền cụ thể.",p:"PostgreSQL là authority cho KB membership; Qdrant không phải.",x:"Cache/index có dữ liệu không biến nó thành authority."},
+      {t:"Fail closed",en:"Từ chối an toàn",c:"Kiến trúc",d:"Khi thiếu/không chắc dữ liệu quyền hoặc lineage, từ chối thay vì cho phép mặc định.",p:"Hit ngoài resolved source tuples bị reject.",x:"Fail closed không có nghĩa che mọi lỗi thành 404; error contract vẫn cần rõ."},
+      {t:"Backward compatibility",en:"Tương thích ngược",c:"Kiến trúc",d:"Code/client cũ vẫn hoạt động trong giai đoạn chuyển đổi có chủ ý.",p:"Route /clauses có thể là compatibility adapter cho frontend cũ ở Release B.",x:"Compatibility không nên trở thành dependency vĩnh viễn không có deprecation plan."},
+      {t:"Legacy",en:"Di sản",c:"Kiến trúc",d:"Code/schema cũ được giữ để tham chiếu hoặc tương thích nhưng không thuộc runtime đích.",p:"MT700 parsers và UCP600 Article pipeline là legacy đối với generic runtime.",x:"Legacy không mặc định là code xấu; chỉ là ngoài scope kiến trúc mới."},
+      {t:"Provider-neutral",en:"Trung lập nhà cung cấp",c:"Kiến trúc",d:"Core contract không buộc consumer dùng một SDK/vendor cụ thể.",p:"EmbeddingProvider không nhắc OpenAI; VectorIndex không nhắc Qdrant.",x:"Adapter provider-specific vẫn cần thiết ở edge."},
+      {t:"Optional dependency",en:"Phụ thuộc tùy chọn",c:"Kiến trúc",d:"Thư viện chỉ cài khi dùng capability cụ thể, thường qua extras.",p:"PyMuPDF trong extra pdf; OpenAI/Qdrant trong extras riêng.",x:"Optional dependency không được eager-import từ package root."},
+
+      {t:"Ingestion",en:"Nạp và chuẩn hóa tài liệu",c:"Document/PDF",d:"Pipeline đưa file nguồn vào hệ thống và tạo representation có provenance.",p:"DocumentInput -> DocumentSource -> ExtractedDocument -> StructuredDocument -> chunks.",x:"Ingestion rộng hơn extraction; nó bao gồm validation/identity/chunking."},
+      {t:"Loader",en:"Bộ nạp",c:"Document/PDF",d:"Stage xác thực file/path/format/identity trước extraction.",p:"loading.py kiểm extension, PDF signature và SHA-256.",x:"Loader không nên tự parse domain structure."},
+      {t:"Extractor",en:"Bộ trích xuất",c:"Document/PDF",d:"Adapter đọc định dạng vật lý và trả text/blocks/layout có thật.",p:"TextDocumentExtractor và PdfDocumentExtractor.",x:"Extractor không quyết định legal clause hoặc document role."},
+      {t:"Parser",en:"Bộ phân tích cấu trúc",c:"Document/PDF",d:"Chuyển blocks đã extract thành cấu trúc logic explicit.",p:"FlatStructureParser gom blocks dưới path filename mà không đoán heading.",x:"Parse khác extract: extract đọc file; parse hiểu cấu trúc representation."},
+      {t:"Chunk",en:"Đoạn dữ liệu truy xuất",c:"Document/PDF",d:"Đơn vị text đủ nhỏ để embedding/retrieval nhưng vẫn giữ identity và source spans.",p:"DocumentChunk chứa text, structure_path, source/version/checksum và spans.",x:"Chunk không phải document và không phải authoritative full reference."},
+      {t:"Chunking",en:"Chia tài liệu",c:"Document/PDF",d:"Chiến lược biến structured document thành chunks.",p:"BlockChunkingStrategy nhóm nguyên blocks dưới max characters.",x:"Cắt text tùy ý có thể làm mất provenance/meaning boundary."},
+      {t:"Strategy",en:"Strategy pattern",c:"Document/PDF",d:"Thuật toán có thể thay thế qua cùng interface tùy mục tiêu/config.",p:"Block, fixed và structure-aware chunking cùng implement ChunkingStrategy.",x:"Strategy không phải runtime provider adapter, dù đều dùng interface."},
+      {t:"Fixed chunking",en:"Chia kích thước cố định",c:"Document/PDF",d:"Chia text theo số ký tự/token cố định, thường có overlap.",p:"Dùng làm baseline research; phải map lại source spans.",x:"Dễ implement nhưng có thể cắt giữa câu/section."},
+      {t:"Block chunking",en:"Chia theo block nguồn",c:"Document/PDF",d:"Giữ nguyên các blocks của extractor và đóng gói chúng dưới giới hạn.",p:"BlockChunkingStrategy hiện đã có code.",x:"Block quá lớn cần policy rõ, không được âm thầm cắt mất span."},
+      {t:"Structure-aware chunking",en:"Chia theo cấu trúc",c:"Document/PDF",d:"Ưu tiên heading/section/paragraph boundaries đã xác minh.",p:"File structure_aware.py hiện là placeholder TO-BE.",x:"Không được tự bịa heading khi parser không phát hiện cấu trúc."},
+      {t:"Structural IR",en:"Intermediate representation",c:"Document/PDF",d:"Biểu diễn trung gian trung lập giữa extraction và chunking.",p:"StructuredDocument/StructuredSection là IR của core.",x:"IR không phải schema DB hoặc Qdrant payload."},
+      {t:"Metadata",en:"Dữ liệu mô tả",c:"Document/PDF",d:"Thuộc tính phụ mô tả dữ liệu chính, thường extensible nhưng không thay core identity.",p:"owner/category có thể nằm trong chunk.metadata.",x:"Không đưa authority/security fields vào metadata tùy ý từ client."},
+      {t:"Provenance",en:"Nguồn gốc bằng chứng",c:"Document/PDF",d:"Thông tin cho biết text/dữ liệu đến từ đâu và có thể kiểm tra lại.",p:"source_id/version/checksum + page/bbox/char span.",x:"Provenance đúng không tự chứng minh nội dung entail kết luận."},
+      {t:"Lineage",en:"Dòng dõi biến đổi",c:"Document/PDF",d:"Chuỗi các bước mà dữ liệu đi qua từ nguồn đến output.",p:"DocumentSource -> block -> chunk -> vector point -> hit -> citation.",x:"Provenance thiên về nguồn; lineage thiên về chuỗi biến đổi."},
+      {t:"Source span",en:"Khoảng nguồn",c:"Document/PDF",d:"Vị trí cụ thể của text trong nguồn: block/page/bbox hoặc char offsets.",p:"SourceSpan model giữ location không bịa đặt.",x:"Một chunk có thể có nhiều spans."},
+      {t:"Character offset",en:"Char start/end",c:"Document/PDF",d:"Vị trí ký tự trong chuỗi/file, thường theo khoảng [start, end).",p:"TXT paragraph giữ char_start và char_end chính xác.",x:"Offset phụ thuộc normalized/original text policy; thay text có thể làm offset vô hiệu."},
+      {t:"Geometry",en:"Hình học trang",c:"Document/PDF",d:"Kích thước và tọa độ vật lý của page/block.",p:"PageGeometry có page_number, width, height.",x:"Geometry không mô tả semantics hoặc reading order.",l:"../rag-core/src/rag_core/ingestion/models.py"},
+      {t:"Bounding box",en:"BBox",c:"Document/PDF",d:"Hình chữ nhật (x0,y0,x1,y1) bao quanh một block trên trang.",p:"PDF SourceSpan dùng bbox để viewer highlight.",x:"BBox phải có x1>x0, y1>y0 và đi với page dimensions."},
+      {t:"Coordinate system",en:"Hệ tọa độ",c:"Document/PDF",d:"Quy ước gốc, trục và đơn vị dùng để diễn giải bbox.",p:"PyMuPDF coordinates cần được viewer scale/rotate đúng theo page.",x:"Không giả định mọi PDF/viewer dùng cùng origin/rotation."},
+      {t:"Reading order",en:"Thứ tự đọc",c:"Document/PDF",d:"Trình tự con người dự kiến đọc các blocks trên trang.",p:"One-column PDF có thể dùng sort; multi-column chưa xác minh bị reject.",x:"Tọa độ gần nhau không luôn suy ra reading order đúng."},
+      {t:"OCR",en:"Optical Character Recognition",c:"Document/PDF",d:"Nhận dạng chữ từ ảnh/scanned page thành text.",p:"PDF không có extractable text trả OCR_REQUIRED.",x:"OCR output cần confidence/provenance riêng; không phải text PDF native."},
+      {t:"Text-based PDF",en:"PDF có text layer",c:"Document/PDF",d:"PDF chứa glyph/text có thể extract trực tiếp, khác ảnh scan.",p:"Release A hỗ trợ one-column text PDF.",x:"Có text layer chưa đảm bảo reading order đúng."},
+      {t:"Scanned PDF",en:"PDF ảnh scan",c:"Document/PDF",d:"Trang chủ yếu là ảnh, không có text layer đáng tin để extract.",p:"Core hiện từ chối và yêu cầu OCR.",x:"Không được mark READY với empty text."},
+      {t:"Multi-column layout",en:"Bố cục nhiều cột",c:"Document/PDF",d:"Trang có nhiều vùng text song song, khiến sort tọa độ đơn giản có thể xen sai thứ tự.",p:"PdfDocumentExtractor dùng heuristic bảo thủ để trả LAYOUT_UNSUPPORTED.",x:"Không phải mọi table/side note đều là column; cần fixture/test rõ."},
+      {t:"Checksum",en:"Content hash",c:"Document/PDF",d:"Dấu vân tay nội dung; SHA-256 thay đổi khi bytes thay đổi.",p:"source_checksum_sha256 gắn file/chunk/snapshot.",x:"Checksum chứng minh equality/integrity, không chứng minh file an toàn hoặc hợp pháp."},
+      {t:"File signature",en:"Magic bytes",c:"Document/PDF",d:"Bytes đầu file giúp xác minh định dạng thực thay vì chỉ tin extension.",p:"PDF phải bắt đầu bằng %PDF-.",x:"Signature check cơ bản không thay thế parser/security scan đầy đủ."},
+      {t:"MIME type",en:"Media type",c:"Document/PDF",d:"Nhãn chuẩn như application/pdf hoặc text/plain mô tả loại nội dung.",p:"Backend upload validation sẽ lưu MIME trong StoredObject.",x:"Client-provided MIME không đáng tin nếu không verify signature/content."},
+      {t:"Document role",en:"Vai trò tài liệu",c:"Document/PDF",d:"Phân loại bất biến tài liệu là contract hoặc knowledge trong domain.",p:"Backend route tự gán role; extractor không gán.",x:"Role khác format: PDF/TXT là format, contract/knowledge là role."},
+
+      {t:"RAG",en:"Retrieval-Augmented Generation",c:"RAG",d:"Mẫu hệ thống tìm evidence trước rồi cung cấp evidence cho model tạo câu trả lời.",p:"Index chunks -> retrieve hits -> build grounded context -> answer + citations.",x:"RAG không bảo đảm zero hallucination hoặc legal correctness."},
+      {t:"Corpus",en:"Tập tài liệu nguồn",c:"RAG",d:"Toàn bộ tài liệu dùng cho indexing/evaluation trong một phạm vi xác định.",p:"Một corpus generic có thể gồm policies, manuals, regulations.",x:"Corpus khác KnowledgeBase: KB là nhóm logic/versioned memberships trong app."},
+      {t:"Knowledge Base",en:"KB",c:"RAG",d:"Nhóm logic các source snapshots được chọn/ủy quyền để retrieval.",p:"KnowledgeBaseMembership nối KB với exact snapshots trong PostgreSQL.",x:"KB không nên là Qdrant collection riêng cho mỗi nhóm nếu làm duplicate vectors."},
+      {t:"Knowledge Document",en:"Tài liệu tri thức",c:"RAG",d:"Domain entity đại diện tài liệu được dùng làm evidence.",p:"Có role=knowledge và StoredObject reference riêng.",x:"Không tái dùng ContractDocument identity dù binary giống nhau."},
+      {t:"Snapshot",en:"Ảnh chụp bất biến",c:"RAG",d:"Phiên bản nội dung/index được xác định bởi source/version/checksum/profile tại một thời điểm.",p:"KnowledgeSourceSnapshot READY chỉ sau index verification.",x:"Version label giống nhau nhưng checksum khác là conflict, không phải cùng snapshot."},
+      {t:"Membership",en:"Quan hệ thành viên",c:"RAG",d:"Quan hệ many-to-many nói snapshot nào thuộc KB nào.",p:"Thêm membership chỉ ghi PostgreSQL nếu snapshot đã index.",x:"Membership không được đưa vào vector identity."},
+      {t:"Index profile",en:"Cấu hình index",c:"RAG",d:"Identity của cách tạo index: extractor/chunker/embedding model/dimension/payload schema.",p:"Cùng source checksum nhưng profile khác có thể cần snapshot index khác.",x:"Chỉ model name chưa đủ nếu chunking/dimension khác."},
+      {t:"Indexing",en:"Lập chỉ mục",c:"RAG",d:"Biến chunks thành representation searchable và lưu vào index.",p:"Build embedding text -> vectors -> Qdrant upsert -> verify.",x:"Indexing khác ingestion; ingestion tạo chunks, indexing làm chúng searchable."},
+      {t:"Payload",en:"Dữ liệu kèm vector/message",c:"RAG",d:"Metadata/data đi cùng point hoặc message ngoài vector chính.",p:"Qdrant payload chứa chunk text, source identity và spans.",x:"Payload schema cần version; không nhét secret/authority tùy ý."},
+      {t:"Schema version",en:"Phiên bản schema",c:"RAG",d:"Số/ID cho biết cấu trúc payload để reader decode đúng và từ chối version không hỗ trợ.",p:"INDEX_PAYLOAD_SCHEMA_VERSION.",x:"Schema version khác source version."},
+      {t:"Embedding",en:"Biểu diễn ngữ nghĩa",c:"RAG",d:"Quá trình chuyển text thành vector số để so sánh độ gần trong không gian vector.",p:"EmbeddingProvider.embed_documents(texts).",x:"Embedding không hiểu quyền/applicability và có thể thay đổi theo model/version."},
+      {t:"Vector",en:"Mảng số thực",c:"RAG",d:"Danh sách tọa độ số đại diện text theo embedding model.",p:"Service kiểm finite values và đúng dimensions.",x:"Vector từ model/dimension khác không được trộn cùng index profile."},
+      {t:"Dimension",en:"Số chiều vector",c:"RAG",d:"Số lượng phần tử của mỗi embedding vector.",p:"expected_dimensions được validate trước Qdrant upsert.",x:"Dimension cao hơn không tự động tốt hơn."},
+      {t:"Dense retrieval",en:"Truy xuất vector dense",c:"RAG",d:"Tìm chunks có vector gần query vector theo metric similarity.",p:"Qdrant thực hiện vector search với exact source filters.",x:"Dense retrieval có thể bỏ lỡ exact keyword/ID."},
+      {t:"Sparse retrieval",en:"Truy xuất từ vựng",c:"RAG",d:"Tìm bằng tín hiệu từ/term thưa như BM25.",p:"sparse.py thuộc Release C hiện là placeholder.",x:"Sparse không dùng semantic embedding dense."},
+      {t:"Hybrid retrieval",en:"Truy xuất lai",c:"RAG",d:"Kết hợp dense và sparse candidates để tận dụng semantics và exact terms.",p:"Hybrid + fusion thuộc research V2.",x:"Chạy hai retriever nhưng không fusion/rank rõ chưa phải hybrid hoàn chỉnh."},
+      {t:"Fusion / RRF",en:"Rank fusion",c:"RAG",d:"Gộp nhiều ranked lists; Reciprocal Rank Fusion cộng điểm dựa trên vị trí với hằng số k.",p:"fusion.py dự kiến dùng cho research.",x:"RRF score không phải probability và không so trực tiếp với cosine score."},
+      {t:"Reranker",en:"Bộ xếp hạng lại",c:"RAG",d:"Model/thuật toán đánh giá query-document pairs trên candidate set để sắp thứ tự tốt hơn.",p:"V3 thêm reranker sau hybrid candidates.",x:"Reranker không thay first-stage retrieval và tăng latency/cost."},
+      {t:"Vector store",en:"Kho vector",c:"RAG",d:"Hệ thống lưu vectors, payload và hỗ trợ similarity search/filter.",p:"Qdrant là vector store adapter của project.",x:"Vector store không phải authority cho KB membership."},
+      {t:"Collection",en:"Qdrant collection",c:"RAG",d:"Namespace/index vật lý chứa points có cùng vector configuration.",p:"Compliance và Research phải dùng collection/prefix riêng.",x:"Collection không đồng nghĩa KnowledgeBase."},
+      {t:"Point",en:"Vector point",c:"RAG",d:"Một record trong vector store gồm ID, vector và payload.",p:"Một DocumentChunk thường ánh xạ một Qdrant point.",x:"Point ID deterministic giúp idempotent upsert."},
+      {t:"Upsert",en:"Insert or update",c:"RAG",d:"Operation tạo record nếu chưa có hoặc cập nhật nếu đã có.",p:"QdrantVectorIndex upsert chunks sau conflict checks.",x:"Upsert mù có thể overwrite immutable evidence; phải inspect snapshot trước."},
+      {t:"Filter",en:"Điều kiện lọc",c:"RAG",d:"Ràng buộc metadata áp dụng trong query để giới hạn kết quả.",p:"Filter exact access_scope/source_id/version/checksum.",x:"Search toàn collection rồi để LLM lọc là không an toàn."},
+      {t:"Similarity score",en:"Điểm tương đồng",c:"RAG",d:"Điểm do retrieval metric tạo để xếp hạng độ gần query-hit.",p:"KnowledgeHit.score phải finite.",x:"Score cao không chứng minh legal applicability hay entailment."},
+      {t:"Top-K",en:"K kết quả đầu",c:"RAG",d:"Số candidates/hits cao nhất được giữ ở một stage.",p:"Retriever limit hoặc final_top_n.",x:"K lớn tăng context/cost và không tự tăng chất lượng."},
+      {t:"Retrieval hit",en:"Kết quả truy xuất",c:"RAG",d:"Chunk được trả về cùng score và provenance.",p:"Hit phải validate lại exact resolved source tuples.",x:"Hit không phải authoritative full document/reference."},
+      {t:"Context",en:"Ngữ cảnh cho model",c:"RAG",d:"Evidence và instruction được render thành input generation.",p:"Hits được gắn labels [S1], [S2].",x:"Context window hữu hạn; không đưa mọi tài liệu vào model."},
+      {t:"Grounded generation",en:"Sinh có căn cứ",c:"RAG",d:"Generation bị ràng buộc sử dụng evidence đã retrieve và citations kiểm được.",p:"GroundedRagService tạo answer + mapped citations.",x:"Grounded không đồng nghĩa semantically/legal verified."},
+      {t:"Citation",en:"Trích dẫn",c:"RAG",d:"Liên kết từ claim/answer label về evidence cụ thể và provenance.",p:"[S1] map tới đúng KnowledgeHit/chunk/spans.",x:"Citation tồn tại không chứng minh source hỗ trợ claim; cần entailment/legal review riêng."},
+      {t:"Evidence",en:"Bằng chứng",c:"RAG",d:"Đoạn nguồn có provenance dùng để hỗ trợ hoặc kiểm tra một claim.",p:"Retrieved chunk + source/version/checksum/spans.",x:"Similarity candidate chưa chắc là evidence đủ mạnh."},
+      {t:"Hallucination",en:"Thông tin bịa/sai căn cứ",c:"RAG",d:"Model tạo nội dung không được evidence hỗ trợ hoặc không đúng thực tế.",p:"Citation validator giảm fake labels nhưng không loại bỏ mọi hallucination.",x:"RAG giảm rủi ro, không bảo đảm zero hallucination."},
+      {t:"Abstention",en:"Từ chối kết luận",c:"RAG",d:"Output có chủ ý nói không đủ evidence thay vì đoán.",p:"Zero hits hoặc citations không hợp lệ phải abstain/INSUFFICIENT_EVIDENCE.",x:"Abstention không phải technical failure; system có thể hoạt động đúng khi từ chối."},
+      {t:"Applicability",en:"Tính áp dụng",c:"RAG",d:"Đánh giá knowledge/rule có thuộc phạm vi cần dùng cho contract/case không.",p:"Thuộc domain review P3, dựa trên verified metadata/policy.",x:"Retrieval similarity thấp/cao không tự quyết định applicability."},
+
+      {t:"HTTP API",en:"Web interface",c:"Backend/Data",d:"Giao diện request/response qua HTTP giữa frontend/client và backend.",p:"POST /api/v1/contracts hoặc GET /api/v1/jobs/{id}.",x:"HTTP API khác Python public API."},
+      {t:"Endpoint / Route",en:"HTTP method + path",c:"Backend/Data",d:"Điểm vào cụ thể của API gồm method, path, schemas và errors.",p:"POST /contracts tạo contract; GET /contracts/{id} đọc metadata.",x:"Cùng path nhưng method khác là endpoints khác."},
+      {t:"Request / Response",en:"Yêu cầu / phản hồi",c:"Backend/Data",d:"Dữ liệu client gửi và backend trả theo schema/HTTP semantics.",p:"Multipart upload request và typed JSON job response.",x:"Request fields không tự là trusted claims."},
+      {t:"HTTP status code",en:"Mã trạng thái HTTP",c:"Backend/Data",d:"Mã chuẩn mô tả kết quả protocol-level như 201, 404, 409, 422, 503.",p:"Unsupported media 415; version conflict 409.",x:"200 không tự có nghĩa business/legal result là compliant."},
+      {t:"Multipart upload",en:"multipart/form-data",c:"Backend/Data",d:"HTTP encoding gửi file và fields trong nhiều parts.",p:"Contract/knowledge upload endpoints nhận file stream.",x:"Không nên đọc toàn file lớn vào RAM trước validation."},
+      {t:"OpenAPI",en:"API specification",c:"Backend/Data",d:"Schema máy đọc mô tả endpoints, requests, responses và errors.",p:"FastAPI sinh OpenAPI để contract test/generate TS types.",x:"OpenAPI chỉ đúng nếu code/schema thật đúng và snapshot được kiểm."},
+      {t:"FastAPI dependency",en:"Dependency injection hook",c:"Backend/Data",d:"Cơ chế FastAPI cung cấp settings/runtime/service cho route.",p:"dependencies.py resolve trusted system scope và service.",x:"Không dùng dependency nhận access_scope tùy ý từ client làm authorization."},
+      {t:"Runtime",en:"Đối tượng tài nguyên đang chạy",c:"Backend/Data",d:"Tập concrete clients/services được tạo cho process và cần close đúng lifecycle.",p:"API runtime giữ DB engine, storage, core services.",x:"Runtime khác source code module; nó là object graph sau composition."},
+      {t:"Lifespan",en:"Startup/shutdown lifecycle",c:"Backend/Data",d:"Hook tạo và đóng tài nguyên khi FastAPI process khởi động/dừng.",p:"main.py lifespan khởi tạo runtime và close clients.",x:"Không tạo resource mới cho mỗi request nếu nó nên được reuse."},
+      {t:"Settings",en:"Cấu hình ứng dụng",c:"Backend/Data",d:"Giá trị từ environment/config được parse và validate trước runtime.",p:"SYSTEM_ACCESS_SCOPE, database URL, collection name.",x:"Settings không nên chứa domain default UCP/MT."},
+      {t:"Environment variable",en:"Biến môi trường",c:"Backend/Data",d:"Cơ chế truyền config vào process/container mà không hard-code.",p:"DATABASE_URL, CELERY_BROKER_URL.",x:"Không commit .env thật; biến NEXT_PUBLIC không được chứa secret."},
+      {t:"Secret",en:"Thông tin bí mật",c:"Backend/Data",d:"Credential/token/key phải được bảo vệ khỏi source, logs và public response.",p:"OpenAI API key, MinIO secret key, Qdrant API key.",x:"SecretStr giảm accidental display nhưng không thay secret manager/security policy."},
+      {t:"ORM",en:"Object-Relational Mapping",c:"Backend/Data",d:"Ánh xạ Python classes/attributes tới database tables/columns.",p:"SQLAlchemy mapped classes cho jobs/documents.",x:"ORM record không nên được dùng trực tiếp làm HTTP/domain model ở mọi boundary."},
+      {t:"Table / Record",en:"Bảng / bản ghi DB",c:"Backend/Data",d:"Table định nghĩa columns/constraints; record là một hàng cụ thể.",p:"jobs table chứa một record cho mỗi durable job.",x:"Record persistence identity khác value object."},
+      {t:"Primary key",en:"Khóa chính",c:"Backend/Data",d:"Column hoặc tập columns định danh duy nhất record.",p:"job_id hoặc contract_id.",x:"Checksum thường không nên là document primary key vì nhiều domain identities có thể chung bytes."},
+      {t:"Foreign key",en:"Khóa ngoại",c:"Backend/Data",d:"Constraint liên kết record tới primary/unique key của table khác.",p:"ContractDocument.stored_object_id -> StoredObject.",x:"FK bảo toàn referential integrity nhưng không thay authorization check."},
+      {t:"Database constraint",en:"Ràng buộc DB",c:"Backend/Data",d:"Luật được database enforce như NOT NULL, CHECK, UNIQUE, FK.",p:"Role literal và non-negative attempt count.",x:"Service validation vẫn cần cho error rõ; DB constraint là lớp bảo vệ cuối."},
+      {t:"Transaction",en:"Giao dịch DB",c:"Backend/Data",d:"Nhóm operations cùng commit hoặc cùng rollback, bảo đảm tính nguyên tử.",p:"Insert job và outbox event trong cùng transaction.",x:"Transaction DB không bao trùm tự động MinIO/Qdrant/Redis."},
+      {t:"Commit / Rollback",en:"Xác nhận / hoàn tác",c:"Backend/Data",d:"Commit làm transaction durable; rollback hủy thay đổi chưa commit.",p:"session_scope commit khi thành công và rollback khi exception.",x:"Rollback DB không tự xóa object đã upload ngoài DB; cần compensation/idempotency."},
+      {t:"Migration",en:"Database schema migration",c:"Backend/Data",d:"Phiên bản thay đổi schema DB có thứ tự và có thể chạy tái lập.",p:"Alembic initial revision tạo schema P2 sạch.",x:"Không copy legacy MT700 migrations vào clean generic schema."},
+      {t:"Object storage",en:"Kho object",c:"Backend/Data",d:"Hệ thống lưu binary objects theo key, không phải relational rows.",p:"MinIO lưu original PDFs/TXT; PostgreSQL lưu metadata/reference.",x:"Object key không phải domain document ID hoặc authorization authority."},
+      {t:"Message broker",en:"Môi giới thông điệp",c:"Backend/Data",d:"Hệ thống trung gian nhận và chuyển messages giữa producer/worker.",p:"Redis làm Celery broker.",x:"Broker không phải durable business database/authority."},
+      {t:"Celery",en:"Python task queue",c:"Backend/Data",d:"Framework dispatch và chạy background tasks qua broker.",p:"Worker nhận job_id và xử lý contract/knowledge indexing.",x:"Celery retry không thay durable job/outbox state trong PostgreSQL."},
+      {t:"Worker",en:"Tiến trình xử lý nền",c:"Backend/Data",d:"Process lấy task, claim job và thực hiện use case ngoài HTTP request.",p:"Contract worker hoặc knowledge indexing worker.",x:"Worker không tin request payload trong broker; phải load DB payload."},
+      {t:"Task",en:"Đơn vị Celery execution",c:"Backend/Data",d:"Function được queue/worker gọi, có retry/timeout configuration.",p:"process_contract_job(job_id).",x:"Task execution khác durable Job entity."},
+      {t:"Job",en:"Công việc bền vững",c:"Backend/Data",d:"Record DB theo dõi lifecycle, payload, result, attempts và errors của công việc nền.",p:"contract_processing hoặc knowledge_indexing job.",x:"Job không chỉ là Redis message."},
+      {t:"Queue",en:"Hàng đợi",c:"Backend/Data",d:"Luồng message chờ workers tiêu thụ, có routing/concurrency semantics.",p:"contract_jobs queue.",x:"Queue không bảo đảm exactly-once."},
+      {t:"Lease",en:"Quyền xử lý có hạn",c:"Backend/Data",d:"Khoảng thời gian worker sở hữu job; hết hạn thì có thể được reclaim.",p:"lease_expires_at ngăn hai worker active cùng lúc theo policy.",x:"Lease dài không thay heartbeat; lease ngắn hơn task dễ tạo duplicate work."},
+      {t:"Heartbeat",en:"Tín hiệu còn sống",c:"Backend/Data",d:"Worker gia hạn lease hoặc báo tiến độ định kỳ trong task dài.",p:"Reconciler dựa vào lease/heartbeat để phát hiện stuck job.",x:"Heartbeat không phải health endpoint của service."},
+      {t:"Attempt ID",en:"Định danh lần thử",c:"Backend/Data",d:"Token duy nhất cho một lần worker claim, dùng chống stale writer.",p:"Result update chỉ thành công nếu attempt_id hiện tại khớp.",x:"attempt_count là số; attempt_id là identity chống race."},
+      {t:"Compare-and-set",en:"CAS",c:"Backend/Data",d:"Cập nhật chỉ khi state/token hiện tại vẫn bằng giá trị mong đợi.",p:"Worker chỉ mark succeeded nếu job vẫn running và attempt_id thuộc mình.",x:"Đọc rồi ghi không condition dễ bị race condition."},
+      {t:"Retry",en:"Thử lại",c:"Backend/Data",d:"Chạy lại operation thất bại có khả năng tạm thời, với giới hạn và policy.",p:"Provider timeout/Redis down có thể retry.",x:"Validation/domain conflict thường không retry được."},
+      {t:"Backoff",en:"Khoảng chờ tăng dần",c:"Backend/Data",d:"Chiến lược tăng thời gian giữa retries để tránh gây tải dồn.",p:"Exponential/bounded retry delay cho outbox/provider.",x:"Backoff không thay max retries/dead-letter policy."},
+      {t:"Timeout",en:"Giới hạn thời gian",c:"Backend/Data",d:"Operation bị dừng/đánh fail nếu vượt thời gian cho phép.",p:"Provider call và task timeout phải ngắn hơn job lease.",x:"Timeout client không chắc server/provider đã dừng side effect."},
+      {t:"Transactional outbox",en:"Mẫu outbox giao dịch",c:"Backend/Data",d:"Ghi event cần publish vào DB cùng transaction với state business, rồi relay publish sau.",p:"Job + outbox event commit cùng nhau.",x:"Outbox vẫn cần idempotent consumer vì duplicate publish có thể xảy ra."},
+      {t:"Dispatcher / Relay",en:"Bộ phát sự kiện",c:"Backend/Data",d:"Process claim outbox events, publish message, rồi ack hoặc schedule retry.",p:"outbox_dispatcher.py.",x:"Không gọi broker trước DB commit."},
+      {t:"Reconciler",en:"Bộ đối soát/phục hồi",c:"Backend/Data",d:"Process quét trạng thái stuck/expired/inconsistent và đưa về state có thể xử lý.",p:"Tìm outbox pending/stuck và jobs hết lease.",x:"Có function reconciler nhưng không có process schedule chạy thì chưa giải quyết reliability."},
+      {t:"At-least-once delivery",en:"Giao ít nhất một lần",c:"Backend/Data",d:"Message được đảm bảo cố gắng giao nhưng có thể giao lặp.",p:"Celery/outbox replay có thể tạo duplicate task message.",x:"Không được giả định exactly-once; consumer phải idempotent."},
+      {t:"Race condition",en:"Điều kiện tranh chấp",c:"Backend/Data",d:"Kết quả phụ thuộc timing xen kẽ giữa nhiều process/threads.",p:"Hai workers cùng claim hoặc worker cũ ghi sau worker mới.",x:"Unit test tuần tự thường không phát hiện; cần atomic DB queries/integration tests."},
+      {t:"Liveness",en:"Process còn sống",c:"Backend/Data",d:"Health check trả lời process có chạy và response cơ bản không.",p:"/health/live không phụ thuộc provider.",x:"Live không có nghĩa hệ thống sẵn sàng phục vụ nghiệp vụ."},
+      {t:"Readiness",en:"Sẵn sàng phục vụ",c:"Backend/Data",d:"Health check xác minh dependencies bắt buộc trong timeout.",p:"/health/ready kiểm DB/broker/storage theo contract.",x:"Ready không phải full E2E/legal acceptance."},
+      {t:"StoredObject",en:"Binary storage identity",c:"Domain project",d:"Entity mô tả object bytes trong storage: key, checksum, size, MIME, verification.",p:"Một StoredObject có thể được hai domain documents tham chiếu.",x:"Không chứa role contract/knowledge."},
+      {t:"ContractDocument",en:"Tài liệu cần xử lý/review",c:"Domain project",d:"Domain entity role=contract, tham chiếu StoredObject và có processing revision/state.",p:"Sinh ReviewUnits sau generic processing.",x:"Không mặc định swift_mt700."},
+      {t:"ReviewUnit",en:"Đơn vị review",c:"Domain project",d:"Đoạn contract có text, source spans, revision và label optional để review độc lập.",p:"Paragraph/block fallback khi không có heading.",x:"Không bịa clause label hoặc bbox."},
+      {t:"KnowledgeSourceSnapshot",en:"Snapshot nguồn tri thức",c:"Domain project",d:"Identity bất biến của source/version/checksum/index_profile đã index/verify.",p:"Membership trỏ tới snapshot, không trỏ source mơ hồ.",x:"READY chỉ sau Qdrant verification."},
+      {t:"Access scope",en:"Phạm vi truy cập",c:"Domain project",d:"Identity server-resolved giới hạn dữ liệu được phép truy cập trong single-tenant trusted mode.",p:"SYSTEM_ACCESS_SCOPE đi qua DB/storage/Qdrant filters.",x:"Không nhận scope từ request/LLM/frontend làm authority."},
+      {t:"Role immutability",en:"Vai trò bất biến",c:"Domain project",d:"Contract/knowledge role không thể đổi sau khi entity được tạo.",p:"Separate tables + literal checks/DB constraints.",x:"Cùng binary có thể tạo hai entities riêng, không đổi role một entity."},
+      {t:"Technical job status",en:"Trạng thái kỹ thuật",c:"Domain project",d:"Cho biết infrastructure execution queued/running/retry/succeeded/failed.",p:"Provider crash làm job failed.",x:"Không trộn với review outcome như insufficient evidence."},
+      {t:"Domain outcome",en:"Kết quả nghiệp vụ",c:"Domain project",d:"Ý nghĩa nghiệp vụ của một job đã chạy thành công về kỹ thuật.",p:"INSUFFICIENT_EVIDENCE có thể nằm trong job succeeded ở Release B.",x:"Technical failure không được giả thành domain no-applicable result."},
+
+      {t:"Unit test",en:"Kiểm thử đơn vị",c:"Testing/DevOps",d:"Test một unit nhỏ với dependencies fake/in-memory, nhanh và deterministic.",p:"test_document_pipeline dùng temporary TXT và fake strategies.",x:"Unit pass không chứng minh provider/DB thật."},
+      {t:"Contract test",en:"Kiểm thử hợp đồng",c:"Testing/DevOps",d:"Xác minh interface/schema giữa producer-consumer hoặc adapter-port.",p:"OpenAPI snapshot và Qdrant adapter payload tests.",x:"Không nhất thiết chạy toàn system."},
+      {t:"Integration test",en:"Kiểm thử tích hợp",c:"Testing/DevOps",d:"Test nhiều component với dependency thật hoặc gần thật.",p:"PostgreSQL migration + repository + service; Qdrant local.",x:"Integration scope cần ghi rõ dependency nào thật/fake."},
+      {t:"E2E test",en:"End-to-end",c:"Testing/DevOps",d:"Test toàn luồng từ entrypoint người dùng/API đến output cuối.",p:"Upload knowledge -> index -> upload contract -> process -> status.",x:"E2E ít case không thay unit/negative tests."},
+      {t:"Smoke test",en:"Kiểm tra khói",c:"Testing/DevOps",d:"Test ngắn xác nhận hệ thống cơ bản khởi động và happy path không vỡ.",p:"smoke_e2e.py với fixture synthetic.",x:"Smoke pass không phải acceptance đầy đủ."},
+      {t:"Characterization test",en:"Test mô tả behavior hiện tại",c:"Testing/DevOps",d:"Khóa behavior legacy trước refactor, kể cả khi chưa lý tưởng.",p:"Tests cũ cho job ownership/API baseline.",x:"Characterization không nói behavior đó là target đúng."},
+      {t:"Regression test",en:"Kiểm thử hồi quy",c:"Testing/DevOps",d:"Test ngăn bug/behavior đã sửa tái xuất hiện.",p:"Checksum lineage hoặc stale attempt bug có test riêng.",x:"Mọi test có thể bắt regression, nhưng nên gắn với risk cụ thể."},
+      {t:"Fixture",en:"Dữ liệu/thiết lập test",c:"Testing/DevOps",d:"Input/dependency setup tái sử dụng cho tests.",p:"Synthetic TXT/PDF một cột hoặc DB rows.",x:"Fixture có dữ liệu nhạy cảm/licensed không được copy tùy ý."},
+      {t:"Fake",en:"Implementation test đơn giản",c:"Testing/DevOps",d:"Implementation hoạt động đơn giản của một port, có state/behavior đủ cho test.",p:"FakeEmbeddingProvider trả vectors định sẵn.",x:"Fake khác mock: fake thường có implementation nhỏ, mock tập trung expectations/calls."},
+      {t:"Mock",en:"Mock object",c:"Testing/DevOps",d:"Object test ghi nhận/kiểm soát calls và configured returns/errors.",p:"Mock Qdrant client/provider call.",x:"Mock quá chi tiết implementation làm test brittle."},
+      {t:"Stub",en:"Stub",c:"Testing/DevOps",d:"Object/function trả dữ liệu định sẵn, ít hoặc không kiểm calls.",p:"Stub generator trả câu trả lời có citation labels.",x:"Tên fake/mock/stub hay dùng lẫn; điều quan trọng là behavior và giới hạn test."},
+      {t:"Assertion",en:"Khẳng định trong test",c:"Testing/DevOps",d:"Điều kiện test bắt buộc đúng; sai thì test fail.",p:"assert result.chunk_count == 2.",x:"Test chạy không exception nhưng không có assertion mạnh có thể vô nghĩa."},
+      {t:"Test coverage",en:"Độ bao phủ",c:"Testing/DevOps",d:"Mức code/path được test thực thi, thường đo theo lines/branches.",p:"Cần negative paths OCR/checksum/dimensions, không chỉ happy path.",x:"Coverage cao không đảm bảo assertions đúng hoặc legal semantics."},
+      {t:"Static analysis",en:"Phân tích tĩnh",c:"Testing/DevOps",d:"Phân tích source mà không chạy business flow để tìm lỗi/pattern.",p:"Ruff và AST boundary checker.",x:"Static pass không chứng minh runtime/provider behavior."},
+      {t:"Lint / Ruff",en:"Kiểm chuẩn code",c:"Testing/DevOps",d:"Công cụ phát hiện style, unused imports và một số bug patterns.",p:"ruff check src tests.",x:"Ruff pass không thay pytest/type checker."},
+      {t:"Type checker",en:"Kiểm tra kiểu tĩnh",c:"Testing/DevOps",d:"Công cụ như mypy/pyright kiểm annotation/usage consistency.",p:"Phát hiện object không implement Port hoặc None không được xử lý.",x:"Python runtime vẫn cần validation cho external data."},
+      {t:"Boundary test",en:"Kiểm thử ranh giới import",c:"Testing/DevOps",d:"Test/AST scan enforce module không import dependency bị cấm.",p:"rag_core không import FastAPI/SQLAlchemy/Celery/backend.",x:"Grep đơn giản có thể miss dynamic import; AST/import graph mạnh hơn."},
+      {t:"Acceptance gate",en:"Cổng nghiệm thu",c:"Testing/DevOps",d:"Tập điều kiện/evidence bắt buộc trước khi phase/release được coi PASS.",p:"P1 cần clean import, boundary checks, tests và generic smoke.",x:"Một command pass không tự làm toàn gate pass."},
+      {t:"PASS / FAIL / BLOCKED / NOT_RUN",en:"Trạng thái evidence",c:"Testing/DevOps",d:"PASS đã chạy đạt; FAIL đã chạy không đạt; BLOCKED thiếu điều kiện; NOT_RUN chưa chạy và có lý do.",p:"Thiếu pytest ban đầu là NOT_RUN, không phải PASS.",x:"BLOCKED khác FAIL và khác TODO."},
+      {t:"OFFLINE_VERIFIED",en:"Đã kiểm offline",c:"Testing/DevOps",d:"Fake/local deterministic checks đã chạy, không dùng live provider.",p:"7 ingestion tests pass trong Compose.",x:"Không gọi là LIVE_ACCEPTED."},
+      {t:"LIVE_ACCEPTED",en:"Đã nghiệm thu live",c:"Testing/DevOps",d:"Flow chạy với infrastructure/provider thật được cấp quyền và có assertions/artifacts.",p:"MinIO/PG/Qdrant/Redis/OpenAI test environment.",x:"Live pass vẫn không tự chứng minh production/legal correctness."},
+      {t:"Docker image",en:"Ảnh container",c:"Testing/DevOps",d:"Template immutable gồm filesystem, runtime, dependencies và default command.",p:"core-test image build từ python:3.11-slim.",x:"Image khác container; container là instance đang chạy."},
+      {t:"Container",en:"Tiến trình cô lập",c:"Testing/DevOps",d:"Instance chạy từ image với config/mount/network cụ thể.",p:"docker compose run --rm core-test.",x:"Container xóa không nhất thiết xóa volume."},
+      {t:"Docker Compose",en:"Multi-container composition",c:"Testing/DevOps",d:"Khai báo services, build, networks, volumes, health và dependencies trong YAML.",p:"core-test hiện tại; sau P2 thêm Postgres/Redis/MinIO/Qdrant/backend/worker.",x:"Compose không phải production orchestrator mặc định."},
+      {t:"Build context",en:"Ngữ cảnh build",c:"Testing/DevOps",d:"Thư mục Docker được phép đọc trong COPY khi build image.",p:"Root workspace context để Dockerfile copy rag-core và backend.",x:"COPY không thể truy cập file ngoài context."},
+      {t:"Bind mount",en:"Gắn thư mục host",c:"Testing/DevOps",d:"Map file/thư mục host vào container để thay đổi source thấy ngay.",p:"./rag-core:/workspace/rag-core.",x:"Bind mount có thể che nội dung cùng path đã COPY trong image."},
+      {t:"Volume",en:"Dữ liệu Docker bền",c:"Testing/DevOps",d:"Storage do Docker quản lý, tồn tại ngoài lifecycle container.",p:"Postgres/Redis/MinIO data volumes.",x:"docker compose down -v xóa volumes, có thể mất dữ liệu test."},
+      {t:"Docker layer/cache",en:"Lớp và cache build",c:"Testing/DevOps",d:"Mỗi build instruction tạo layer có thể tái dùng nếu inputs không đổi.",p:"Sửa pyproject cần rebuild dependency layer.",x:"Cache cũ có thể che việc dependency chưa cài; dùng --no-cache khi chẩn đoán."},
+      {t:"Compose profile",en:"Nhóm service tùy chọn",c:"Testing/DevOps",d:"Cách chỉ bật một nhóm services khi cần.",p:"profile test bật core-test.",x:"Service có profile không tự chạy trong compose up nếu profile chưa bật."},
+      {t:"Editable install",en:"pip install -e",c:"Testing/DevOps",d:"Cài package bằng link tới source để sửa code thấy ngay mà không reinstall package.",p:"pip install -e /workspace/rag-core[dev,pdf].",x:"Sửa dependencies vẫn cần rebuild/reinstall."},
+      {t:"Extras",en:"Optional dependency group",c:"Testing/DevOps",d:"Nhóm dependency tùy chọn khai báo trong pyproject.",p:"[dev,pdf], sau này [openai,qdrant].",x:"Extras không tự cô lập import; code vẫn phải tránh eager import."},
+      {t:"Lockfile",en:"Khóa phiên bản dependency",c:"Testing/DevOps",d:"File ghi chính xác dependency versions/resolution để install tái lập.",p:"Chỉ tạo khi đã chọn uv/pip-tools workflow thật.",x:"pyproject range không phải lockfile."}
+    ];
+
+    const grid = document.getElementById('glossary-grid');
+    const filters = document.getElementById('filters');
+    const search = document.getElementById('search');
+    const empty = document.getElementById('empty');
+    const categories = ['Tất cả', ...new Set(terms.map(item => item.c))];
+    let activeCategory = 'Tất cả';
+
+    const escapeHtml = value => String(value).replace(/[&<>"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[char]));
+    const normalize = value => String(value).toLocaleLowerCase('vi').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+
+    const renderFilters = () => {
+      filters.innerHTML = categories.map(category => `<button class="filter${category === activeCategory ? ' active' : ''}" data-category="${escapeHtml(category)}">${escapeHtml(category)}</button>`).join('');
+      filters.querySelectorAll('button').forEach(button => button.addEventListener('click', () => {
+        activeCategory = button.dataset.category;
+        renderFilters(); renderTerms();
+      }));
+    };
+
+    const renderTerms = () => {
+      const query = normalize(search.value.trim());
+      const visible = terms
+        .filter(item => activeCategory === 'Tất cả' || item.c === activeCategory)
+        .filter(item => normalize(`${item.t} ${item.en} ${item.c} ${item.d} ${item.p} ${item.x}`).includes(query))
+        .sort((a,b) => a.t.localeCompare(b.t,'vi'));
+      grid.innerHTML = visible.map(item => `
+        <article class="term">
+          <div class="term-top"><h3>${escapeHtml(item.t)}<span class="english">${escapeHtml(item.en)}</span></h3><span class="cat">${escapeHtml(item.c)}</span></div>
+          <p class="definition">${escapeHtml(item.d)}</p>
+          <div class="project"><span class="label">Trong dự án:</span> ${escapeHtml(item.p)}</div>
+          <div class="confuse"><span class="label">Dễ nhầm:</span> ${escapeHtml(item.x)}</div>
+          ${item.l ? `<div class="source"><a href="${escapeHtml(item.l)}">Mở file liên quan →</a></div>` : ''}
+        </article>`).join('');
+      empty.style.display = visible.length ? 'none' : 'block';
+      document.getElementById('term-count').textContent = `${terms.length} thuật ngữ`;
+    };
+
+    search.addEventListener('input', renderTerms);
+    renderFilters(); renderTerms();
+  </script>
+</body>
+</html>

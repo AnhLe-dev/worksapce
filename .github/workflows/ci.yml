@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  rag-core:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Build core images
+        run: docker compose --profile test build core-import core-test
+
+      - name: Verify core-only imports
+        run: docker compose --profile test run --rm core-import
+
+      - name: Lint
+        run: docker compose --profile test run --rm core-test ruff check src tests
+
+      - name: Unit and smoke tests
+        run: docker compose --profile test run --rm core-test python -m pytest -q
+
+      - name: Check architecture boundaries
+        run: >-
+          docker compose --profile test run --rm core-test
+          python /workspace/scripts/check_boundaries.py
+
+  release-a-backend:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Build backend test image
+        run: docker compose --profile test build backend-test
+
+      - name: Lint backend and operational scripts
+        run: >-
+          docker compose --profile test run --rm backend-test
+          ruff check app migrations scripts tests
+
+      - name: Run backend offline suite
+        run: >-
+          docker compose --profile test run --rm backend-test
+          python -m pytest -q
+
+      - name: Build runtime image
+        run: docker compose build backend
+
+      - name: Start PostgreSQL
+        run: docker compose up -d --wait postgres
+
+      - name: Upgrade clean database to Alembic head
+        run: >-
+          docker compose run --rm --no-deps backend
+          alembic upgrade head
+
+      - name: Verify Alembic current revision
+        run: >-
+          docker compose run --rm --no-deps backend
+          alembic current
+
+  release-b-agent:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Verify Phase 3 agent and backend integration
+        run: make phase3-verify
